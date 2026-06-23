@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TavernChat",
+    "name": "MobileTavern",
     "slug": "TavernChat",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,10 +16,16 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.motis6742.TavernChat"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "db4ad4dc-1bdd-49e1-b124-df91f55dc121"
+      }
     }
   }
 }

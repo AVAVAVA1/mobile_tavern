@@ -39,3 +39,25 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# private files
+character
+
+# project planning / docs
+Project.md
+Project.pdf
+agent_architecture.md
+agent_new.md
+command.md
+comparison_report.md
+comparison_report.pdf
+st_flow_detail.md
+st_flow_detail.pdf
+task.html
+task.jpeg
+task.md
+temporary.md
+
+# reference
+sillytavern/
+
