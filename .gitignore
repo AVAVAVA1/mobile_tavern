@@ -61,5 +61,69 @@ temporary.md
 # reference
 sillytavern/
 RB/
-fake/
+
+
+
+# fake 
+# ===== 依赖 / 虚拟环境 =====
+# Python 虚拟环境（仓库根目录）
+fake/strange/.venv/
+fake/strange/venv/
+fake/strange/env/
+fake/strange/.conda/
+# pip 离线安装的临时产物
+fake/strange/.piptmp/
+fake/strange/.wheels/
+
+# Node
+fake/strange/node_modules/
+fake/strange/.npm-cache/
+fake/strange/.npm-logs/
+
+# ===== 构建产物 =====
+fake/strange/dist/
+fake/strange/build/
+fake/strange/*.egg-info/
+
+# ===== Python 缓存 =====
+fake/strange/__pycache__/
+fake/strange/*.py[cod]
+fake/strange/*$py.class
+fake/strange/.pytest_cache/
+fake/strange/.mypy_cache/
+fake/strange/.ruff_cache/
+fake/strange/.coverage
+fake/strange/htmlcov/
+
+# ===== 运行时数据（首次启动自动生成，勿提交）=====
+fake/strange/backend/data/
+
+# ===== 生成图片输出 =====
+fake/strange/output/
+
+# ===== 配置 / 密钥 =====
+# config.json 含 API Key 等敏感信息，请勿提交
+fake/strange/config.json
+fake/strange/.env
+fake/strange/.env.*
+!fake/strange/.env.example
+!fake/strange/config.example.json
+
+# ===== IDE / 编辑器 =====
+fake/strange/.idea/
+fake/strange/.vscode/
+fake/strange/*.swp
+fake/strange/*.swo
+
+# ===== 系统文件 =====
+fake/strange/.DS_Store
+fake/strange/Thumbs.db
+fake/strange/desktop.ini
+
+# ===== 日志 =====
+fake/strange/*.log
+fake/strange/npm-debug.log*
+fake/strange/yarn-debug.log*
+fake/strange/yarn-error.log*
+fake/strange/pnpm-debug.log*
 

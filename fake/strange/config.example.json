@@ -1,0 +1,24 @@
+{
+  "User Name": "ALA",
+  "Status Bar": true,
+  "API Key": "sk-xxxx  # 换成你自己的 API Key",
+  "Model": "deepseek-v4-flash-vision-exp",
+  "Base URL": "https://api.deepseek.com",
+  "Summarize Threshold": 0,
+  "Auto Summarize": false,
+  "Custom System Prompt": "",
+  "Author's Note": "",
+  "Author's Note Depth": 4,
+  "Story String Template": "",
+  "picGenerate": {
+    "source": "comfyui",
+    "sources": {
+      "comfyui": {
+        "url": "http://127.0.0.1:8188",
+        "workflow": "anima.json",
+        "promptPrefix": "masterpiece, best quality, score9,score8,@riko_(rik0ring), @dishwasher1910, @ribao",
+        "negativePrefix": "bad quality,worst quality,worst detail,censor, ugly, bad hands, (text, logo, signed, signiture:1), ugly feet, malformed feet, fused toes, ugly toes,"
+      }
+    }
+  }
+}
