@@ -84,6 +84,7 @@ async def fill_reply_meta(
             ],
             tools=[SET_REPLY_META_TOOL],
             tool_choice={"type": "function", "function": {"name": "set_reply_meta"}},
+            kind="reply_meta",
         )
         return parse_reply_meta(resp)
     except Exception:

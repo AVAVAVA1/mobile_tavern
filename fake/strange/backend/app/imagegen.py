@@ -12,6 +12,7 @@ import httpx
 
 from . import config
 from .llm import call_chat_non_streaming
+from .logging import log_image_prompt
 
 PROMPT_ENGINEER_SYSTEM = """## 角色设定
 你是一名专业的 ComfyUI 提示词工程师。你的任务是将用户提供的中文场景描述，直接转换为用于 Stable Diffusion 的英文正向提示词（Positive Prompt）。
@@ -35,13 +36,13 @@ PROMPT_ENGINEER_SYSTEM = """## 角色设定
 masterpiece, best quality, highres, detailed, 1girl, solo, long hair, flowing hair, wind, holding umbrella, rain, night, street lamp, standing, looking sad, melancholic, wet ground, reflections, gloomy atmosphere, dramatic lighting"""
 
 
-def _apply_placeholders(node, positive: str, negative: str):
+def apply_placeholders(node, positive: str, negative: str):
     if isinstance(node, str):
         return node.replace("%PositivePrompt%", positive).replace("%NegativePrompt%", negative)
     if isinstance(node, list):
-        return [_apply_placeholders(x, positive, negative) for x in node]
+        return [apply_placeholders(x, positive, negative) for x in node]
     if isinstance(node, dict):
-        return {k: _apply_placeholders(v, positive, negative) for k, v in node.items()}
+        return {k: apply_placeholders(v, positive, negative) for k, v in node.items()}
     return node
 
 
@@ -53,7 +54,7 @@ async def convert_to_tags(settings: dict, source_text: str) -> str:
     resp = await call_chat_non_streaming(settings, [
         {"role": "system", "content": PROMPT_ENGINEER_SYSTEM},
         {"role": "user", "content": source_text},
-    ])
+    ], kind="image_prompt")
     msg = (resp.get("choices") or [{}])[0].get("message") or {}
     return (msg.get("content") or "").strip()
 
@@ -81,6 +82,7 @@ async def generate_image(settings: dict, source_text: str) -> Dict[str, Any]:
         return {"ok": False, "message": f"提示词转换失败：{e}"}
 
     positive = _join(prompt_prefix, tags)
+    log_image_prompt(source_text, tags, positive, negative, workflow_name, url)
 
     wf_path = config.WORKFLOWS_DIR / workflow_name
     if not wf_path.exists():
@@ -90,11 +92,11 @@ async def generate_image(settings: dict, source_text: str) -> Dict[str, Any]:
     except json.JSONDecodeError as e:
         return {"ok": False, "message": f"workflow 不是合法 JSON：{e}"}
 
-    workflow = _apply_placeholders(workflow, positive, negative)
-    return await _submit_and_fetch(workflow, url)
+    workflow = apply_placeholders(workflow, positive, negative)
+    return await submit_and_fetch(workflow, url)
 
 
-async def _submit_and_fetch(workflow: dict, url: str) -> Dict[str, Any]:
+async def submit_and_fetch(workflow: dict, url: str) -> Dict[str, Any]:
     """提交 ComfyUI → 轮询 → 下载 → 保存到 output/。"""
     client_id = str(uuid.uuid4())
     out_dir = config.OUTPUT_DIR

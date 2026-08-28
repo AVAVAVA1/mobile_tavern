@@ -125,6 +125,7 @@ async def extract_status_schema(card: dict, settings: dict) -> dict:
             msgs,
             tools=[_STATUS_SCHEMA_TOOL],
             tool_choice={"type": "function", "function": {"name": "set_status_schema"}},
+            kind="card_analysis",
         )
         args = _extract_tool_args(resp, "set_status_schema")
         if args:

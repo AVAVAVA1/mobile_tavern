@@ -6,6 +6,8 @@ from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 import httpx
 
+from .logging import log_llm_request, log_llm_response
+
 
 def _clean_key(api_key: str) -> str:
     return "".join(ch for ch in api_key if 0x20 <= ord(ch) <= 0x7E).strip()
@@ -31,8 +33,11 @@ async def stream_chat(
     settings: Dict[str, Any],
     messages: List[dict],
     check_disconnect: Optional[Callable[[], Any]] = None,
+    kind: str = "chat",
 ) -> AsyncIterator[str]:
     """流式请求，逐段 yield 正文增量。check_disconnect 可为 async 可调用（返回真值则中断）。"""
+    log_llm_request(kind, settings.get("model") or "", _url(settings), _messages(messages))
+    parts: List[str] = []
     client = httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=30.0))
     try:
         async with client.stream(
@@ -68,9 +73,11 @@ async def stream_chat(
                     delta = (choices[0].get("delta") if choices else None) or {}
                     content = delta.get("content")
                     if content:
+                        parts.append(content)
                         yield content
                 except (json.JSONDecodeError, TypeError, ValueError):
                     continue
+        log_llm_response(kind, "".join(parts))
     finally:
         await client.aclose()
 
@@ -80,6 +87,7 @@ async def call_chat_non_streaming(
     messages: List[dict],
     tools: Optional[List[dict]] = None,
     tool_choice: Optional[Any] = None,
+    kind: str = "llm",
 ) -> dict:
     body: Dict[str, Any] = {
         "model": settings.get("model"),
@@ -90,11 +98,14 @@ async def call_chat_non_streaming(
         body["tools"] = tools
         body["tool_choice"] = tool_choice if tool_choice is not None else "auto"
 
+    log_llm_request(kind, settings.get("model") or "", _url(settings), _messages(messages))
     async with httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=30.0)) as client:
         resp = await client.post(_url(settings), headers=_headers(settings), json=body)
         if resp.status_code != 200:
             raise RuntimeError(f"API error {resp.status_code}: {resp.text[:2000]}")
-        return resp.json()
+        data = resp.json()
+        log_llm_response(kind, json.dumps(data, ensure_ascii=False, indent=2))
+        return data
 
 
 def asyncio_iscoro(obj: Any) -> bool:

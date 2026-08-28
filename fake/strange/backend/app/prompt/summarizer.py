@@ -57,7 +57,7 @@ async def summarize_history(
     data = await call_chat_non_streaming(settings, [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
-    ])
+    ], kind="summary")
 
     choices = data.get("choices") or []
     message = choices[0].get("message") if choices else {}

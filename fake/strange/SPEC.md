@@ -5,6 +5,7 @@
 - 后端：Python 3.12 + FastAPI，位于 `backend/`，复用 `fake/strange/.venv`
 - 前端：Vue 3 + Vite + TypeScript，位于 `frontend/`
 - 所有数据以 **camelCase** JSON 在前后端之间传输（与原来 TS 代码一致）
+- 功能视角的技术文档见 `docs/README.md`（本文档是端点的唯一契约权威）
 
 ## 运行约定
 

@@ -5,6 +5,7 @@
 - `backend/` — Python 3.12 + FastAPI，复用本目录下的 `.venv`
 - `frontend/` — Vue 3 + Vite + TypeScript + Pinia + vue-router + markdown-it
 - `SPEC.md` — 前后端 API 契约 / 数据模型 / 主题色
+- `docs/` — 功能技术文档（输入/输出/依赖），见 `docs/README.md`；对接功能先看这里
 - `Project.md`（仓库根目录）— 原项目的技术细节
 
 ---
@@ -30,6 +31,8 @@ cd backend
 ```
 
 服务地址 `http://127.0.0.1:8100`，数据持久化在 `backend/data/settings.json` 与 `backend/data/sessions.json`（首次启动自动创建）。
+
+> **日志**：所有 LLM 调用（对话/状态栏/总结/元数据/卡分析/生图转写）的**原始提示词与原始回复**，以及生图提示词，会同时输出到**后端控制台**与 `backend/logs/app.log`（滚动，单份 2MB，最多 3 份）。日志不含 API Key。详见 `docs/backend/logging.md`。
 
 ### 启动配置 `config.json`
 
@@ -106,11 +109,14 @@ backend/
 │   ├── models.py          # Pydantic 模型（camelCase）
 │   ├── store.py           # 内存态 + JSON 持久化
 │   ├── llm.py             # OpenAI 兼容流式/非流式客户端（httpx）
+│   ├── logging.py         # 统一日志（原始提示词/回复/生图提示词 → 控制台 + logs/）
 │   ├── parser/            # PNG chunk + 角色卡 V1/V2/V3 解析
 │   ├── prompt/            # 占位符/mes_example/世界书/story string/AN/template/总结
-│   ├── agent/             # 三代理(planner/writer/status) + loreRouter + (deprecated) agent_context
-│   └── routers/           # settings/sessions/chat/context
+│   ├── agent/             # 状态管理(status_manager)等纯函数
+│   ├── services/          # 用例编排层（对话/状态栏/总结/自动生图）
+│   └── routers/           # HTTP 层（settings/sessions/chat/context/pic）
 ├── data/                  # settings.json + sessions.json（运行时生成）
+├── logs/                  # app.log（运行时生成，LLM 请求/回复日志）
 ├── requirements.txt
 ├── run.py                 # python run.py
 └── *.py                   # 测试脚本
