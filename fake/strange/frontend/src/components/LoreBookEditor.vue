@@ -27,7 +27,7 @@
           <div class="entry-actions">
             <ToggleSwitch
               :model-value="entry.enabled !== false"
-              color="#e94560"
+              color="var(--accent)"
               @update:model-value="toggleEntry(idx)"
             />
             <button class="delete-icon" @click="deleteEntry(idx)">✕</button>
@@ -51,31 +51,37 @@
 
       <div class="switch-row">
         <span class="label">Constant</span>
-        <ToggleSwitch v-model="form.constant" color="#e94560" />
+        <ToggleSwitch v-model="form.constant" color="var(--accent)" />
       </div>
 
       <div class="switch-row">
         <span class="label">Enabled</span>
-        <ToggleSwitch v-model="form.enabled" color="#e94560" />
+        <ToggleSwitch v-model="form.enabled" color="var(--accent)" />
       </div>
 
       <label class="label">Position</label>
-      <div class="seg-row">
-        <button
-          class="seg-btn"
-          :class="{ active: form.position === 'before_char' }"
-          @click="form.position = 'before_char'"
-        >
-          Before Char
-        </button>
-        <button
-          class="seg-btn"
-          :class="{ active: form.position === 'after_char' }"
-          @click="form.position = 'after_char'"
-        >
-          After Char
-        </button>
+      <select v-model="form.position" class="input">
+        <option v-for="p in POSITIONS" :key="p.value" :value="p.value">{{ p.label }}</option>
+      </select>
+
+      <div class="switch-row">
+        <span class="label">Regex Keys（关键词按正则匹配）</span>
+        <ToggleSwitch v-model="form.useRegex" color="var(--accent)" />
       </div>
+
+      <div class="switch-row">
+        <span class="label">Probability 启用（非 constant 条目按概率触发）</span>
+        <ToggleSwitch v-model="form.useProbability" color="var(--accent)" />
+      </div>
+
+      <label class="label">Probability (0-100)</label>
+      <input v-model="form.probability" class="input" placeholder="100" />
+
+      <label class="label">Depth（at_depth 位置时插入深度）</label>
+      <input v-model="form.depth" class="input" placeholder="4" />
+
+      <label class="label">Scan Depth（扫描最近 N 条，0=不扫描，空=默认）</label>
+      <input v-model="form.scanDepth" class="input" placeholder="空=默认" />
 
       <div class="form-btns">
         <button class="cancel-btn" @click="editIdx = null">Cancel</button>
@@ -88,7 +94,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useSessionsStore } from "../stores/sessions";
-import type { LoreBookEntry } from "../types";
+import type { LoreBookEntry, WorldInfoPosition } from "../types";
 import ToggleSwitch from "./ToggleSwitch.vue";
 
 const props = defineProps<{ visible: boolean; sessionId: string }>();
@@ -96,13 +102,28 @@ const emit = defineEmits<{ (e: "close"): void }>();
 
 const sessionsStore = useSessionsStore();
 
+const POSITIONS: { value: WorldInfoPosition; label: string }[] = [
+  { value: "system_top", label: "系统提示词顶层" },
+  { value: "global_note", label: "全局备注" },
+  { value: "before_char", label: "角色设定前" },
+  { value: "after_char", label: "角色设定后" },
+  { value: "at_depth", label: "按深度插入" },
+  { value: "user_top", label: "用户消息顶部" },
+  { value: "assistant_top", label: "助手消息顶部" },
+];
+
 interface EntryForm {
   title: string;
   keys: string;
   content: string;
   constant: boolean;
   enabled: boolean;
-  position: "before_char" | "after_char";
+  position: WorldInfoPosition;
+  useRegex: boolean;
+  useProbability: boolean;
+  probability: string;
+  depth: string;
+  scanDepth: string;
 }
 
 const defaultEntry = (): EntryForm => ({
@@ -112,6 +133,11 @@ const defaultEntry = (): EntryForm => ({
   constant: false,
   enabled: true,
   position: "before_char",
+  useRegex: false,
+  useProbability: true,
+  probability: "100",
+  depth: "4",
+  scanDepth: "",
 });
 
 const editIdx = ref<number | null>(null);
@@ -123,13 +149,19 @@ const entries = computed<LoreBookEntry[]>(() => {
 });
 
 function entryToForm(e: LoreBookEntry): EntryForm {
+  const pos = (e.position ?? "before_char") as WorldInfoPosition;
   return {
     title: e.comment ?? "",
     keys: (e.keys ?? []).join(", "),
     content: e.content ?? "",
     constant: e.constant ?? false,
     enabled: e.enabled ?? true,
-    position: e.position === "after_char" ? "after_char" : "before_char",
+    position: pos,
+    useRegex: e.useRegex ?? false,
+    useProbability: e.useProbability ?? true,
+    probability: String(e.probability ?? 100),
+    depth: String(e.depth ?? 4),
+    scanDepth: e.scanDepth == null ? "" : String(e.scanDepth),
   };
 }
 
@@ -141,9 +173,14 @@ function formToEntry(f: EntryForm): LoreBookEntry {
     constant: f.constant,
     enabled: f.enabled,
     position: f.position,
+    useRegex: f.useRegex,
+    useProbability: f.useProbability,
+    probability: Number(f.probability) || 100,
+    depth: Number(f.depth) || 4,
+    scanDepth: f.scanDepth === "" ? null : Number(f.scanDepth),
+    order: 100,
     insertion_order: 100,
-    case_sensitive: false,
-    selective: false,
+    scope: "character",
     secondary_keys: [],
   };
 }
@@ -208,25 +245,25 @@ async function toggleEntry(idx: number): Promise<void> {
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  background: #16213e;
-  border-bottom: 1px solid #2a2a4a;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
 }
 .back-btn {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 16px;
   padding: 4px 8px;
 }
 .title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 18px;
   font-weight: 600;
 }
 .add-btn {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 15px;
   font-weight: 600;
   padding: 4px 8px;
@@ -237,15 +274,15 @@ async function toggleEntry(idx: number): Promise<void> {
   padding: 14px;
 }
 .empty {
-  color: #555;
+  color: var(--text-faint);
   text-align: center;
   margin-top: 80px;
   font-size: 14px;
 }
 .entry-card {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 12px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -256,7 +293,7 @@ async function toggleEntry(idx: number): Promise<void> {
   cursor: pointer;
 }
 .entry-title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 2px;
@@ -265,7 +302,7 @@ async function toggleEntry(idx: number): Promise<void> {
   white-space: nowrap;
 }
 .entry-keys {
-  color: #e94560;
+  color: var(--accent);
   font-size: 11px;
   margin-bottom: 4px;
   overflow: hidden;
@@ -273,7 +310,7 @@ async function toggleEntry(idx: number): Promise<void> {
   white-space: nowrap;
 }
 .entry-preview {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
   line-height: 18px;
   display: -webkit-box;
@@ -285,7 +322,7 @@ async function toggleEntry(idx: number): Promise<void> {
   margin-top: 6px;
 }
 .meta-text {
-  color: #555;
+  color: var(--text-faint);
   font-size: 11px;
 }
 .entry-actions {
@@ -298,7 +335,7 @@ async function toggleEntry(idx: number): Promise<void> {
 .delete-icon {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 16px;
   font-weight: 700;
   padding: 0;
@@ -309,28 +346,28 @@ async function toggleEntry(idx: number): Promise<void> {
   padding: 16px;
 }
 .form-title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 20px;
 }
 .label {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   margin: 12px 0 6px;
   display: block;
 }
 .input {
   width: 100%;
-  background: #16213e;
-  color: #e0e0e0;
+  background: var(--panel);
+  color: var(--text);
   border-radius: 10px;
   padding: 14px;
   font-size: 15px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .input::placeholder {
-  color: #666;
+  color: var(--text-faint);
 }
 .content-input {
   min-height: 120px;
@@ -351,17 +388,17 @@ async function toggleEntry(idx: number): Promise<void> {
 }
 .seg-btn {
   flex: 1;
-  background: #16213e;
+  background: var(--panel);
   border-radius: 8px;
   padding: 12px;
-  color: #888;
+  color: var(--text-mid);
   font-size: 14px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .seg-btn.active {
-  border-color: #e94560;
+  border-color: var(--accent);
   background: rgba(233, 69, 96, 0.1);
-  color: #e94560;
+  color: var(--accent);
   font-weight: 600;
 }
 .form-btns {
@@ -375,13 +412,13 @@ async function toggleEntry(idx: number): Promise<void> {
   border-radius: 10px;
   padding: 14px;
   background: none;
-  border: 1px solid #2a2a4a;
-  color: #a0a0b8;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
   font-size: 15px;
 }
 .save-btn {
   flex: 1;
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 10px;
   padding: 14px;

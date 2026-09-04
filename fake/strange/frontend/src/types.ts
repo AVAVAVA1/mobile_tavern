@@ -18,6 +18,10 @@ export interface AppSettings {
   customSystemPrompt: string;
   /** 状态栏开关 */
   statusBarEnabled: boolean;
+  /** 是否请求 LLM 开启思考模式（thinking），不支持该参数的模型可关掉 */
+  enableThinking: boolean;
+  /** 思考强度：low / medium / high */
+  reasoningEffort: string;
   /** 生图配置 */
   picGenerate?: PicGenerateSettings;
 }
@@ -161,8 +165,15 @@ export interface LoreBookEntry {
   comment?: string;
   constant?: boolean;
   enabled?: boolean;
-  position?: "before_char" | "after_char";
+  position?: WorldInfoPosition;
   insertion_order?: number;
+  order?: number;
+  depth?: number;
+  scanDepth?: number | null;
+  probability?: number;
+  useProbability?: boolean;
+  useRegex?: boolean;
+  scope?: "character" | "global";
   case_sensitive?: boolean;
   selective?: boolean;
   secondary_keys?: string[];
@@ -174,4 +185,57 @@ export interface LoreBookEntry {
   status_constant?: boolean;
   status_enabled?: boolean;
   [key: string]: any;
+}
+
+// ---- 世界书增强（RP-Hub）----
+
+export type WorldInfoPosition =
+  | "system_top"
+  | "global_note"
+  | "before_char"
+  | "after_char"
+  | "at_depth"
+  | "user_top"
+  | "assistant_top";
+
+export interface WorldInfoEntry {
+  comment: string;
+  content: string;
+  enabled: boolean;
+  scope: "character" | "global";
+  keys: string[];
+  useRegex: boolean;
+  constant: boolean;
+  position: WorldInfoPosition;
+  order: number;
+  depth: number;
+  scanDepth: number | null;
+  probability: number;
+  useProbability: boolean;
+}
+
+// ---- 预设（带 role）----
+
+export interface Preset {
+  name: string;
+  content: string;
+  enabled: boolean;
+  role: "system" | "user" | "assistant";
+}
+
+// ---- 正则脚本 ----
+
+export interface RegexScript {
+  name: string;
+  regex: string;
+  flags: string;
+  replacement: string;
+  placement: number[];
+  markdownOnly: boolean;
+  promptOnly: boolean;
+  runOnEdit: boolean;
+  minDepth: number | null;
+  maxDepth: number | null;
+  scope: "global" | "character";
+  enabled: boolean;
 }

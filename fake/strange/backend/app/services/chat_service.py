@@ -8,7 +8,12 @@ import asyncio
 from typing import Any, AsyncIterator, Optional
 
 from .. import store
-from ..llm import stream_chat
+from ..llm import stream_chat, strip_thinking
+from ..prompt.regex_scripts import (
+    apply_regex_to_messages,
+    extract_character_regex_scripts,
+    normalize_regex_script,
+)
 from ..prompt.template import build_conversation_context
 from ..reply_meta import fill_reply_meta
 from .image_service import maybe_generate_image
@@ -44,6 +49,11 @@ async def run_chat_turn(
         # 状态栏作为上下文注入（可选）
         status = session.get("status") if settings.get("statusBarEnabled") else ""
 
+        # 全局 + 角色级正则脚本（发送侧 placement 2）
+        global_scripts = [normalize_regex_script(s, "global") for s in store.get_global_regex_scripts()]
+        char_scripts = extract_character_regex_scripts(card)
+        combined_scripts = global_scripts + [s for s in char_scripts if s.get("scope") != "global"]
+
         context = build_conversation_context(
             card, history, user_name,
             session.get("summary") or None,
@@ -51,7 +61,12 @@ async def run_chat_turn(
             settings,
             session.get("deletedMessageIds"),
             status=status,
+            presets=store.get_global_presets(),
+            global_world_info=store.get_global_world_info(),
         )
+
+        # 发送前应用正则脚本（placement 2 / promptOnly）
+        context = apply_regex_to_messages(context, combined_scripts, is_prompt=True)
 
         # 1. 单次流式生成正文
         async for chunk in stream_chat(settings, context, check_disconnect):
@@ -65,7 +80,8 @@ async def run_chat_turn(
                 yield status_event
 
         # 3. 填写元数据表（每次回复都填，用于触发后续动作）
-        reply_content = (store.get_message(session_id, assistant_msg["id"]) or {}).get("content", "")
+        raw_reply = (store.get_message(session_id, assistant_msg["id"]) or {}).get("content", "")
+        reply_content = strip_thinking(raw_reply)
         meta = await fill_reply_meta(settings, reply_content, text)
         store.set_message(session_id, assistant_msg["id"], replyMeta=meta.model_dump())
         yield {"type": "reply_meta", "meta": meta.model_dump()}

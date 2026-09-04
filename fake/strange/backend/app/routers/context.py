@@ -48,6 +48,8 @@ def get_context(session_id: str):
         settings,
         session.get("deletedMessageIds"),
         status=status,
+        presets=store.get_global_presets(),
+        global_world_info=store.get_global_world_info(),
     )
     return {
         "mode": "normal",

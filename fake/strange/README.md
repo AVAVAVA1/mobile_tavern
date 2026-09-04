@@ -1,6 +1,6 @@
-# MobileTavern PC 版（前后端分离）
+# 2b2（原 MobileTavern）PC 版（前后端分离）
 
-把原 Expo/React Native 角色扮演 app 移植到 PC：**Vue 3 前端 + FastAPI 后端**。
+把原 Expo/React Native 角色扮演 app 移植到 PC：**Vue 3 前端 + FastAPI 后端**。UI 深色/浅色双主题（侧边栏顶部 🌙/☀️ 切换）。
 
 - `backend/` — Python 3.12 + FastAPI，复用本目录下的 `.venv`
 - `frontend/` — Vue 3 + Vite + TypeScript + Pinia + vue-router + markdown-it
@@ -27,10 +27,12 @@
 
 ```bash
 cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8100
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8100
 ```
 
-服务地址 `http://127.0.0.1:8100`，数据持久化在 `backend/data/settings.json` 与 `backend/data/sessions.json`（首次启动自动创建）。
+服务地址 `http://127.0.0.1:8100`（本机）/ `http://<电脑局域网IP>:8100`（局域网设备），数据持久化在 `backend/data/settings.json` 与 `backend/data/sessions.json`（首次启动自动创建）。
+
+> **手机端访问**：`--host 0.0.0.0` 让后端可被局域网设备访问；手机访问 `http://<电脑局域网IP>:8100`（或前端 `http://<电脑局域网IP>:5173`，Vite 已代理 `/api`）。生图仍由电脑后端完成（后端用 localhost 连本机 ComfyUI，`config.json` 里 ComfyUI `url` 保持 `http://127.0.0.1:8188` 即可），手机只负责触发与显示图片。需放行防火墙 8100 端口。
 
 > **日志**：所有 LLM 调用（对话/状态栏/总结/元数据/卡分析/生图转写）的**原始提示词与原始回复**，以及生图提示词，会同时输出到**后端控制台**与 `backend/logs/app.log`（滚动，单份 2MB，最多 3 份）。日志不含 API Key。详见 `docs/backend/logging.md`。
 

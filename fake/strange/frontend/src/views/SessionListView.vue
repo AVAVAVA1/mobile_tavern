@@ -2,11 +2,9 @@
   <div class="container">
     <!-- Header -->
     <header class="header">
-      <h1 class="header-title">MobileTavern</h1>
+      <h1 class="header-title">2b2</h1>
       <div class="header-right">
         <button class="header-btn" @click="showImport = true">Import</button>
-        <button class="header-btn" @click="showPic = true">Pic</button>
-        <button class="header-btn" @click="showSettings = true">Settings</button>
       </div>
     </header>
 
@@ -32,6 +30,7 @@
                 <button class="mini-btn edit" @click="openEdit(session)">Edit</button>
                 <button class="mini-btn book" @click="openLoreBook(session)">Book</button>
                 <button class="mini-btn status" @click="openStatusEditor(session)">Status</button>
+                <button class="mini-btn exp" @click="exportCard(session)">Exp</button>
                 <button class="mini-btn del" @click="handleDelete(session)">Del</button>
               </div>
             </div>
@@ -71,12 +70,6 @@
       @imported="onImported"
     />
 
-    <!-- Settings modal -->
-    <SettingsModal :visible="showSettings" @close="showSettings = false" />
-
-    <!-- Pic generate modal -->
-    <PicGenerateModal :visible="showPic" @close="showPic = false" />
-
     <!-- Lore book editor -->
     <LoreBookEditor
       v-if="loreBookSession"
@@ -107,19 +100,15 @@ import { useRouter } from "vue-router";
 import { useSessionsStore } from "../stores/sessions";
 import { replacePlaceholders } from "../utils/markdown";
 import type { Session } from "../types";
-import SettingsModal from "../components/SettingsModal.vue";
 import ImportModal from "../components/ImportModal.vue";
 import LoreBookEditor from "../components/LoreBookEditor.vue";
 import CardInfoModal from "../components/CardInfoModal.vue";
 import StatusEditor from "../components/StatusEditor.vue";
-import PicGenerateModal from "../components/PicGenerateModal.vue";
 
 const router = useRouter();
 const sessionsStore = useSessionsStore();
 
-const showSettings = ref(false);
 const showImport = ref(false);
-const showPic = ref(false);
 
 const editSession = ref<Session | null>(null);
 const editTitle = ref("");
@@ -183,6 +172,15 @@ async function handleDelete(session: Session): Promise<void> {
   }
 }
 
+function exportCard(session: Session): void {
+  const a = document.createElement("a");
+  a.href = `/api/sessions/${session.id}/export`;
+  a.download = `${displayName(session)}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 function openLoreBook(session: Session): void {
   loreBookSession.value = session;
 }
@@ -205,7 +203,7 @@ function onImported(id: string): void {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #1a1a2e;
+  background: var(--bg);
 }
 
 /* Header */
@@ -214,11 +212,11 @@ function onImported(id: string): void {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #16213e;
-  border-bottom: 1px solid #2a2a4a;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
 }
 .header-title {
-  color: #e94560;
+  color: var(--accent);
   font-size: 22px;
   font-weight: 700;
   margin: 0;
@@ -230,7 +228,7 @@ function onImported(id: string): void {
 .header-btn {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   padding: 4px;
 }
@@ -249,14 +247,14 @@ function onImported(id: string): void {
 
 /* Card */
 .card {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 14px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   overflow: hidden;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .card:hover {
-  border-color: #3a3a5a;
+  border-color: var(--border-hover);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
   transform: translateY(-1px);
 }
@@ -272,7 +270,7 @@ function onImported(id: string): void {
   margin-bottom: 6px;
 }
 .card-name {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 17px;
   font-weight: 600;
 }
@@ -301,16 +299,19 @@ function onImported(id: string): void {
   background: #3b82f6;
 }
 .mini-btn.book {
-  background: #10b981;
+  background: var(--success);
 }
 .mini-btn.status {
   background: #f59e0b;
 }
+.mini-btn.exp {
+  background: #06b6d4;
+}
 .mini-btn.del {
-  background: #e94560;
+  background: var(--accent);
 }
 .card-preview {
-  color: #888;
+  color: var(--text-mid);
   font-size: 13px;
   line-height: 18px;
   margin-bottom: 10px;
@@ -326,14 +327,14 @@ function onImported(id: string): void {
   flex-wrap: wrap;
 }
 .meta-text {
-  color: #555;
+  color: var(--text-faint);
   font-size: 12px;
 }
 .tag {
   background: rgba(233, 69, 96, 0.15);
   border-radius: 4px;
   padding: 2px 6px;
-  color: #e94560;
+  color: var(--accent);
   font-size: 10px;
 }
 
@@ -347,20 +348,20 @@ function onImported(id: string): void {
   padding: 40px;
 }
 .empty-title {
-  color: #888;
+  color: var(--text-mid);
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 8px;
 }
 .empty-subtitle {
-  color: #555;
+  color: var(--text-faint);
   font-size: 14px;
   text-align: center;
   line-height: 20px;
   margin-bottom: 28px;
 }
 .empty-btn {
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 12px;
   padding: 14px 24px;
@@ -371,26 +372,26 @@ function onImported(id: string): void {
 
 /* Edit modal */
 .edit-box {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 16px;
   padding: 24px;
   width: min(85%, 380px);
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .edit-label {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
 }
 .edit-input {
   width: 100%;
-  background: #1a1a2e;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--text);
   border-radius: 10px;
   padding: 14px;
   font-size: 16px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   margin-bottom: 20px;
 }
 .edit-btns {
@@ -401,12 +402,12 @@ function onImported(id: string): void {
 .edit-cancel {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 15px;
   padding: 10px 18px;
 }
 .edit-save {
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 8px;
   padding: 10px 20px;

@@ -5,6 +5,9 @@ import type {
   StatusSchema,
   ChatMessage,
   ReplyMeta,
+  Preset,
+  RegexScript,
+  WorldInfoEntry,
 } from "./types";
 
 const BASE = "/api";
@@ -50,6 +53,72 @@ export async function putSettings(
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(partial),
+    })
+  );
+}
+
+// ---- 全局预设 / 正则脚本 / 世界书（RP-Hub 增强）----
+
+export async function getPresets(): Promise<Preset[]> {
+  return handleResponse<Preset[]>(await fetch(`${BASE}/presets`));
+}
+
+export async function putPresets(items: Preset[]): Promise<Preset[]> {
+  return handleResponse<Preset[]>(
+    await fetch(`${BASE}/presets`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(items),
+    })
+  );
+}
+
+export async function getRegexScripts(): Promise<RegexScript[]> {
+  return handleResponse<RegexScript[]>(await fetch(`${BASE}/regex`));
+}
+
+export async function putRegexScripts(items: RegexScript[]): Promise<RegexScript[]> {
+  return handleResponse<RegexScript[]>(
+    await fetch(`${BASE}/regex`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(items),
+    })
+  );
+}
+
+export async function getWorldInfo(): Promise<WorldInfoEntry[]> {
+  return handleResponse<WorldInfoEntry[]>(await fetch(`${BASE}/worldinfo`));
+}
+
+export async function putWorldInfo(items: WorldInfoEntry[]): Promise<WorldInfoEntry[]> {
+  return handleResponse<WorldInfoEntry[]>(
+    await fetch(`${BASE}/worldinfo`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(items),
+    })
+  );
+}
+
+// ---- 角色卡生成 ----
+
+export async function generateCard(prompt: string): Promise<Record<string, any>> {
+  return handleResponse<Record<string, any>>(
+    await fetch(`${BASE}/cards/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    })
+  );
+}
+
+export async function createCard(card: Record<string, any>): Promise<Session> {
+  return handleResponse<Session>(
+    await fetch(`${BASE}/cards/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ card }),
     })
   );
 }

@@ -88,6 +88,23 @@ async def completions(request: Request):
             args = {"generateImage": True, "imageReason": "mock 触发生图"}
             return JSONResponse({"choices": [{"message": {"role": "assistant", "content": None,
                 "tool_calls": [_tool_call(rid, "set_reply_meta", args)]}, "finish_reason": "tool_calls"}]})
+        if "generate_character_card" in names:
+            args = {
+                "name": "雨夜吸血鬼",
+                "description": "在雨夜街头偶遇的温柔吸血鬼少女。",
+                "personality": "温柔而孤独，外表冰冷，内心渴望陪伴。",
+                "scenario": "雨夜的街头。",
+                "first_mes": "你……也是来躲雨的吗？",
+                "tags": ["吸血鬼", "雨夜"],
+                "world_info": [
+                    {"comment": "世界观", "content": "这是一个存在吸血鬼的现代都市。", "keys": ["吸血鬼"], "position": "system_top", "constant": True}
+                ],
+                "regex_scripts": [
+                    {"name": "对话加粗", "regex": "\"([^\"]+)\"", "replacement": "**$1**", "placement": [1, 2]}
+                ],
+            }
+            return JSONResponse({"choices": [{"message": {"role": "assistant", "content": None,
+                "tool_calls": [_tool_call(rid, "generate_character_card", args)]}, "finish_reason": "tool_calls"}]})
 
     if not stream:
         if kind == "summarize":
@@ -96,6 +113,11 @@ async def completions(request: Request):
             content = f"[GUIDE#{rid}] 走向基于用户发言: {last_user[:60]}"
         elif kind == "prompt_engineer":
             content = "masterpiece, best quality, highres, detailed, 1girl, solo, long hair"
+        elif kind == "status":
+            # 模拟状态管理代理输出 JSON（新路径：直接输出 JSON，不再 function calling）
+            sc = next(_status_calls)
+            patch = {"mood": "高兴"} if sc % 2 == 1 else {"location": "卧室"}
+            content = json.dumps(patch, ensure_ascii=False)
         else:
             content = f"[GENERIC#{rid}]"
         return JSONResponse({
@@ -110,6 +132,11 @@ async def completions(request: Request):
     pieces = [label, "·", "流", "·", str(rid)]
 
     def gen():
+        # 非 status 的普通对话：先输出 reasoning_content（模拟推理模型），再输出正文
+        if kind != "status":
+            for r in ("这是思考", "过程"):
+                chunk = json.dumps({"choices": [{"delta": {"reasoning_content": r}, "finish_reason": None}]}, ensure_ascii=False)
+                yield f"data: {chunk}\n\n"
         for p in pieces:
             chunk = json.dumps({"choices": [{"delta": {"content": p}, "finish_reason": None}]}, ensure_ascii=False)
             yield f"data: {chunk}\n\n"

@@ -87,14 +87,14 @@ async function onFileChange(e: Event): Promise<void> {
   width: 100%;
 }
 .title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 26px;
   font-weight: 700;
   text-align: center;
   margin: 0 0 12px;
 }
 .subtitle {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   text-align: center;
   line-height: 20px;
@@ -102,18 +102,18 @@ async function onFileChange(e: Event): Promise<void> {
 }
 .error-box {
   background: rgba(233, 69, 96, 0.15);
-  border: 1px solid #e94560;
+  border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 20px;
 }
 .error-text {
-  color: #e94560;
+  color: var(--accent);
   font-size: 13px;
   line-height: 18px;
 }
 .import-btn {
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 12px;
   padding: 18px;
@@ -131,7 +131,7 @@ async function onFileChange(e: Event): Promise<void> {
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 15px;
 }
 .hidden-input {

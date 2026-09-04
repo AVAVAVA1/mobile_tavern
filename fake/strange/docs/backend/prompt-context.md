@@ -9,32 +9,41 @@
 - `backend/app/prompt/mes_example.py` — mes_example → few-shot 消息对
 - `backend/app/prompt/placeholders.py` — `{{user}}/{{char}}`、`<user>/<char>` 替换
 - `backend/app/prompt/authors_note.py` — Author's Note 注入
+- `backend/app/prompt/world_book.py` — 世界书（增强位置）
+- `backend/app/prompt/presets.py` — 预设（system/user/assistant）
+- `backend/app/prompt/regex_scripts.py` — 正则脚本（发送侧在 chat_service 应用）
 
 ## 输入
 
 ```python
 build_conversation_context(card, history, user_name,
     summary=None, last_summarized_index=None, settings=None,
-    deleted_message_ids=None, status=None) -> List[dict]
+    deleted_message_ids=None, status=None,
+    presets=None, global_world_info=None) -> List[dict]
 ```
 
 - `card`：角色卡 dict
 - `history`：`[{"role","content","id"}, ...]`（真实历史）
 - `user_name`：用户名
 - `summary` / `last_summarized_index`：总结文本与已总结到的下标
-- `settings`：设置（storyStringTemplate / customSystemPrompt / authorNoteText / authorNoteDepth）
+- `settings`：设置（storyStringTemplate / customSystemPrompt / authorNoteText / authorNoteDepth / worldInfoScanDepth / worldInfoMaxDepth）
 - `deleted_message_ids`：从上下文移除的消息 id 集合
 - `status`：当前状态栏文本（statusBarEnabled 时才注入）
+- `presets`：全局预设列表（system→system prompt，user/assistant→消息）
+- `global_world_info`：全局世界书条目
 
 ## 输出
 - 有序 `messages` 数组，顺序固定：
-  1. `system`：自定义系统提示词 + Story String 渲染结果
-  2. few-shot：mes_example 解析出的 `user`/`assistant` 对
-  3. `assistant`：first_mes（开场白，占位符已替换）
-  4. `system`：`[Previous conversation summary]`（若有总结）
-  5. `system`：`[Current Status]`（若有状态栏）
-  6. 未总结的真实历史（跳过 first_mes 重复、跳过 deletedMessageIds）
-  7. 注入 Author's Note（插入到倒数第 N 条，N=authorNoteDepth）
+  1. `system`：系统预设 → system_top → global_note 世界书 → 自定义系统提示词 → Story String 渲染结果
+  2. 消息预设（user/assistant role）
+  3. few-shot：mes_example 解析出的 `user`/`assistant` 对
+  4. `assistant`：first_mes（开场白，占位符已替换）
+  5. `system`：`[Previous conversation summary]`（若有总结）
+  6. `system`：`[Current Status]`（若有状态栏）
+  7. 未总结的真实历史（跳过 first_mes 重复、跳过 deletedMessageIds）+ Author's Note
+  8. 消息级世界书注入：`at_depth`（按 depth 插 user 消息）/ `user_top` / `assistant_top`
+
+> 正则脚本（placement 2/promptOnly）在 `services/chat_service.py` 里对最终 messages 应用，不在 template 里。
 
 ## 子模块契约
 - `render_story_string(template, params) -> str`：用 `{{char}}/{{user}}/{{description}}/{{personality}}/{{scenario}}/{{system}}/{{mes_example_raw}}/{{post_history}}/{{wi_before}}/{{wi_after}}` 宏渲染；空模板用 `DEFAULT_TEMPLATE`。

@@ -4,8 +4,9 @@
 
 ```
 frontend/ (Vue 3 + Vite + TS + Pinia)
+  App.vue / AppSidebar        —— 应用外壳：可折叠左侧边栏 + 主内容区（参照 RP-Hub 布局）
   views / components          —— 页面与交互，只通过 stores + api.ts 说话
-  stores/                     —— Pinia 状态（settings/sessions），乐观更新
+  stores/                     —— Pinia 状态（settings/sessions/appdata），乐观更新
   api.ts                      —— 唯一的前后端通道（REST + SSE）
         │  HTTP/SSE  (同源 /api，Vite 代理到 127.0.0.1:8100)
 backend/ (FastAPI)

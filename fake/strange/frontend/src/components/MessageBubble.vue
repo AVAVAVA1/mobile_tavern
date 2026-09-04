@@ -22,28 +22,34 @@
     class="bubble"
     :class="isUser ? 'user-bubble' : 'assistant-bubble'"
   >
-    <!-- Chain of Thought -->
-    <div v-if="!isUser && parsed.thinking" class="think-toggle">
-      <button class="think-toggle-text" @click="thinkingExpanded = !thinkingExpanded">
-        {{ thinkingExpanded ? "▼" : "▶" }} Chain of Thought
+    <!-- Thinking card (思维链) -->
+    <div v-if="!isUser && parsed.thinking" class="thinking-card">
+      <button class="thinking-header" @click="thinkingExpanded = !thinkingExpanded">
+        <span class="thinking-bulb">💡</span>
+        <span class="thinking-title">Thinking</span>
+        <span class="thinking-chevron">{{ thinkingExpanded ? "▼" : "▶" }}</span>
       </button>
-      <div v-if="thinkingExpanded" class="think-content">{{ parsed.thinking }}</div>
+      <div
+        v-if="thinkingExpanded"
+        class="thinking-body md-body md-assistant"
+        v-html="renderMarkdown(parsed.thinking)"
+      ></div>
     </div>
 
-    <!-- Body -->
+    <!-- Main body -->
     <div
-      v-if="parsed.body"
+      v-if="parsed.main"
       class="md-body"
       :class="isUser ? 'md-user' : 'md-assistant'"
-      v-html="renderMarkdown(parsed.body)"
+      v-html="renderMarkdown(parsed.main)"
     ></div>
     <div v-else-if="parsed.thinking" class="waiting">Generating...</div>
-    <div
-      v-else
-      class="md-body"
-      :class="isUser ? 'md-user' : 'md-assistant'"
-      v-html="renderMarkdown(parsed.displayContent)"
-    ></div>
+
+    <!-- 临时指令 (sys) -->
+    <div v-if="!isUser && parsed.sys" class="sys-card">
+      <div class="sys-title">📌 临时指令</div>
+      <div class="md-body md-assistant" v-html="renderMarkdown(parsed.sys)"></div>
+    </div>
 
     <!-- 元数据表（调试用，后续会隐藏） -->
     <div v-if="!isUser && message.replyMeta" class="meta-debug">
@@ -62,14 +68,18 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { ChatMessage } from "../types";
+import type { ChatMessage, RegexScript } from "../types";
 import { renderMarkdown, replacePlaceholders } from "../utils/markdown";
+import { parseCot } from "../utils/cot";
+import { processRegex } from "../utils/regex";
 
 const props = defineProps<{
   message: ChatMessage;
   charName: string;
   userName: string;
   generating?: boolean;
+  /** 显示侧正则脚本（全局 + 角色级，已规范化） */
+  regexScripts?: RegexScript[];
 }>();
 const emit = defineEmits<{ (e: "generate-image", id: string): void }>();
 
@@ -79,41 +89,51 @@ const isImage = computed(() => props.message.messageType === "image");
 
 const thinkingExpanded = ref(false);
 
+// 兼容中文/花括号思维链（parseCot 未命中 <think>/<cot> 时的兜底）
 const THINK_PATTERNS: { open: RegExp; close: RegExp }[] = [
-  { open: /<thinking>/i, close: /<\/thinking>/i },
   { open: /【思考】/, close: /【\/思考】/ },
   { open: /\{思考\}/, close: /\{\/思考\}/ },
 ];
 
 const parsed = computed(() => {
-  const displayContent = replacePlaceholders(
+  const placeholderContent = replacePlaceholders(
     props.message.content,
     props.charName,
     props.userName
   );
 
-  let thinking = "";
-  let body = displayContent;
+  // 先拆思维链/正文/系统指令（对齐 RP-Hub：显示正则只作用正文 main，不作用 thinking/sys）
+  const cot = parseCot(placeholderContent);
+  let thinking = cot.cot;
+  let main = processRegex(cot.main, props.regexScripts ?? [], {
+    isDisplay: true,
+    role: props.message.role,
+    depth: 0,
+  });
+  const sys = cot.sys;
 
-  for (const pat of THINK_PATTERNS) {
-    const openMatch = displayContent.match(pat.open);
-    if (!openMatch) continue;
-    const openEnd = (openMatch.index ?? 0) + openMatch[0].length;
-    const closeMatch = displayContent.match(pat.close);
-    if (closeMatch) {
-      thinking = displayContent.slice(openEnd, closeMatch.index ?? 0).trim();
-      body = displayContent.slice((closeMatch.index ?? 0) + closeMatch[0].length).trim();
-    } else {
-      thinking = displayContent.slice(openEnd).trim();
-      body = "";
+  // 兜底：中文/花括号思维链
+  if (!thinking) {
+    for (const pat of THINK_PATTERNS) {
+      const openMatch = main.match(pat.open);
+      if (!openMatch) continue;
+      const openEnd = (openMatch.index ?? 0) + openMatch[0].length;
+      const closeMatch = main.match(pat.close);
+      if (closeMatch) {
+        thinking = main.slice(openEnd, closeMatch.index ?? 0).trim();
+        main = main.slice((closeMatch.index ?? 0) + closeMatch[0].length).trim();
+      } else {
+        thinking = main.slice(openEnd).trim();
+        main = "";
+      }
+      break;
     }
-    break;
   }
 
   thinking = thinking.replace(/^\n+|\n+$/g, "");
-  body = body.replace(/^\n+|\n+$/g, "");
+  main = main.replace(/^\n+|\n+$/g, "");
 
-  return { thinking, body, displayContent };
+  return { thinking, main, sys };
 });
 </script>
 
@@ -125,11 +145,11 @@ const parsed = computed(() => {
   margin: 4px 14px;
 }
 .user-bubble {
-  background: #e94560;
+  background: var(--accent);
   align-self: flex-end;
 }
 .assistant-bubble {
-  background: #0f3460;
+  background: var(--assistant-bg);
   align-self: flex-start;
 }
 
@@ -139,14 +159,14 @@ const parsed = computed(() => {
   border-radius: 10px;
   padding: 10px;
   margin: 6px 14px;
-  background: #1a2332;
+  background: var(--status-bg);
   align-self: center;
-  border: 1px solid #2a3a4a;
+  border: 1px solid var(--status-border);
 }
 .status-header {
   background: none;
   border: none;
-  color: #10b981;
+  color: var(--success);
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 4px;
@@ -166,45 +186,86 @@ const parsed = computed(() => {
   max-width: 100%;
   max-height: 420px;
   border-radius: 12px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 
-/* Thinking toggle */
-.think-toggle {
+/* Thinking card（对齐 RP-Hub 的可折叠 Thinking 卡片） */
+.thinking-card {
   margin-bottom: 8px;
+  border: 1px solid rgba(var(--overlay-rgb), 0.1);
+  border-radius: 10px;
+  background: var(--thinking-bg);
+  overflow: hidden;
 }
-.think-toggle-text {
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 12px;
   font-weight: 600;
-  padding: 0;
+  padding: 8px 10px;
   text-align: left;
+  cursor: pointer;
 }
-.think-content {
-  color: #888;
-  font-size: 11px;
-  line-height: 16px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  margin-top: 4px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
-  white-space: pre-wrap;
+.thinking-header:hover {
+  color: var(--text);
+}
+.thinking-bulb {
+  font-size: 13px;
+}
+.thinking-title {
+  flex: 1;
+}
+.thinking-chevron {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.thinking-body {
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgba(var(--overlay-rgb), 0.06);
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 18px;
+  max-height: 320px;
+  overflow-y: auto;
 }
 .waiting {
-  color: #666;
+  color: var(--text-faint);
   font-size: 13px;
   font-style: italic;
+}
+
+/* 临时指令 (sys) 卡片 */
+.sys-card {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(240, 192, 64, 0.25);
+  border-radius: 10px;
+  background: rgba(240, 192, 64, 0.06);
+}
+.sys-title {
+  color: var(--quote);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.sys-card .md-body {
+  color: var(--text);
+  font-size: 13px;
 }
 
 /* 元数据表（调试） */
 .meta-debug {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.15);
-  color: #f0c040;
+  border-top: 1px dashed rgba(var(--overlay-rgb), 0.15);
+  color: var(--quote);
   font-size: 11px;
   line-height: 16px;
 }

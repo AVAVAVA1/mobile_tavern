@@ -24,6 +24,7 @@
             :char-name="charName"
             :user-name="userName"
             :generating="generatingImage"
+            :regex-scripts="displayRegexScripts"
             @generate-image="generateImage"
           />
         </div>
@@ -72,8 +73,10 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useSessionsStore } from "../stores/sessions";
 import { useSettingsStore } from "../stores/settings";
+import { useAppDataStore } from "../stores/appdata";
 import { streamChat, generateImageForMessage } from "../api";
-import type { ChatMessage } from "../types";
+import type { ChatMessage, RegexScript } from "../types";
+import { normalizeRegexScript } from "../utils/regex";
 import MessageBubble from "../components/MessageBubble.vue";
 import HistoryManager from "../components/HistoryManager.vue";
 
@@ -82,6 +85,7 @@ const props = defineProps<{ id: string }>();
 const router = useRouter();
 const sessionsStore = useSessionsStore();
 const settingsStore = useSettingsStore();
+const appDataStore = useAppDataStore();
 
 const input = ref("");
 const loading = ref(false);
@@ -102,6 +106,18 @@ const charName = computed(
   () => session.value?.characterCard.data.name || "Character"
 );
 const userName = computed(() => session.value?.userName || "User");
+
+// 显示侧正则脚本（全局 + 角色级）
+const displayRegexScripts = computed<RegexScript[]>(() => {
+  const global = appDataStore.regexScripts.map((s) => normalizeRegexScript(s, "global"));
+  const data = session.value?.characterCard.data as any;
+  const raw =
+    data?.extensions?.regex_scripts ?? data?.regex_scripts ?? data?.regexScripts;
+  const character = Array.isArray(raw)
+    ? (raw as any[]).map((s) => normalizeRegexScript(s, "character"))
+    : [];
+  return [...global, ...character.filter((s) => s.scope !== "global")];
+});
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -132,6 +148,7 @@ watch(
 );
 
 onMounted(async () => {
+  if (!appDataStore.loaded) appDataStore.load();
   await sessionsStore.refreshSession(props.id);
   scrollToBottom();
 });
@@ -276,7 +293,7 @@ watch(
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #1a1a2e;
+  background: var(--bg);
 }
 
 /* Header */
@@ -285,18 +302,18 @@ watch(
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  background: #16213e;
-  border-bottom: 1px solid #2a2a4a;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
 }
 .back-btn {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 16px;
   padding: 4px 8px;
 }
 .header-title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 18px;
   font-weight: 600;
   flex: 1;
@@ -309,7 +326,7 @@ watch(
 .hist-btn {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   font-weight: 600;
   padding: 8px;
@@ -328,13 +345,13 @@ watch(
 }
 .empty-text,
 .error-text {
-  color: #555;
+  color: var(--text-faint);
   text-align: center;
   margin-top: 100px;
   font-size: 15px;
 }
 .error-text {
-  color: #e94560;
+  color: var(--accent);
   font-size: 16px;
 }
 
@@ -365,7 +382,7 @@ watch(
   width: 14px;
   height: 14px;
   border: 2px solid rgba(233, 69, 96, 0.3);
-  border-top-color: #e94560;
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -375,7 +392,7 @@ watch(
   }
 }
 .loading-text {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
 }
 
@@ -384,27 +401,27 @@ watch(
   display: flex;
   align-items: flex-end;
   padding: 12px;
-  background: #16213e;
-  border-top: 1px solid #2a2a4a;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
   gap: 10px;
 }
 .input {
   flex: 1;
-  background: #1a1a2e;
-  color: #e0e0e0;
+  background: var(--input-bg);
+  color: var(--text);
   border-radius: 20px;
   padding: 10px 16px;
   font-size: 15px;
   line-height: 21px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   resize: none;
   max-height: 120px;
 }
 .input::placeholder {
-  color: #666;
+  color: var(--text-faint);
 }
 .send-btn {
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 20px;
   padding: 10px 20px;
@@ -414,7 +431,7 @@ watch(
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
 .send-btn:hover {
-  background: #f0526c;
+  background: var(--accent-hover);
   transform: translateY(-1px);
 }
 .stop-btn {

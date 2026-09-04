@@ -6,6 +6,7 @@
 ## 文件
 - `frontend/src/stores/settings.ts`
 - `frontend/src/stores/sessions.ts`
+- `frontend/src/stores/appdata.ts`
 
 ## settings store（`useSettingsStore`）
 - 状态：`settings`、`loaded`、`loading`。
@@ -25,6 +26,10 @@
 | `importCard(file)` / `removeSession(id)` | CRUD |
 | `patchTitle` / `patchCharacterBook` / `patchAgentBook` / `patchStatusSchema` | PATCH 后替换本地 |
 | `removeFromContext(id, msgId)` | 从上下文移除 |
+
+## appdata store（`useAppDataStore`）
+- 状态：`presets` / `regexScripts` / `worldInfo`（全局，`backend/data/app_data.json`）、`loaded`、`loading`。
+- 方法：`load()`（并发拉取三类）、`savePresets(list)`、`saveRegexScripts(list)`、`saveWorldInfo(list)`。
 
 ## 依赖 / 被谁调用
 - 依赖 `api.ts`；被所有页面/组件调用。

@@ -6,6 +6,7 @@ PROJECT_DIR = BACKEND_DIR.parent                      # fake/strange/
 DATA_DIR = BACKEND_DIR / "data"
 SETTINGS_FILE = DATA_DIR / "settings.json"
 SESSIONS_FILE = DATA_DIR / "sessions.json"
+APP_DATA_FILE = DATA_DIR / "app_data.json"            # 全局预设/正则/世界书（RP-Hub 增强）
 CONFIG_FILE = PROJECT_DIR / "config.json"             # 用户手写的启动配置
 WORKFLOWS_DIR = PROJECT_DIR / "workflows"             # ComfyUI workflow JSON 存放目录
 OUTPUT_DIR = PROJECT_DIR / "output"                   # 生图结果临时输出目录

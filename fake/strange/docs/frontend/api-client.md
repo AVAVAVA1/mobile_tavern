@@ -31,6 +31,9 @@
 | `generateComfyUI()` | — | `{ok,message,url?,filename?}` |
 | `generateImageForMessage(sessionId, messageId)` | — | `ChatMessage` |
 | `listWorkflows()` / `getWorkflow(name)` / `saveWorkflow(name, content)` | — | 见签名 |
+| `getPresets()` / `putPresets(items)` | 预设数组 | `Preset[]` |
+| `getRegexScripts()` / `putRegexScripts(items)` | 脚本数组 | `RegexScript[]` |
+| `getWorldInfo()` / `putWorldInfo(items)` | 条目数组 | `WorldInfoEntry[]` |
 | `streamChat(id, text, callbacks)` | 文本 + 回调 | `{abort}` |
 
 ## SSE（`streamChat`）

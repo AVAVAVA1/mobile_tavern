@@ -19,6 +19,41 @@ _lock = threading.RLock()
 
 _settings: Dict[str, Any] = {}
 _sessions: Dict[str, dict] = {}
+_app_data: Dict[str, Any] = {"presets": [], "regexScripts": [], "worldInfo": [], "_seeded": False}
+
+# 默认全局世界书（参考 RP-Hub 系统世界书思路：示范「关键词触发」与「正则触发」两种机制）
+DEFAULT_WORLD_INFO: List[dict] = [
+    {
+        "comment": "战斗描写风格",
+        "content": "战斗场景要求：描写动作细节与节奏，突出紧张感，不用冗长内心独白；双方反应要真实，不写无敌。",
+        "enabled": True,
+        "scope": "global",
+        "keys": ["战斗", "打斗", "攻击", "动手"],
+        "useRegex": False,
+        "constant": False,
+        "position": "global_note",
+        "order": 100,
+        "depth": 4,
+        "scanDepth": 8,
+        "probability": 100,
+        "useProbability": True,
+    },
+    {
+        "comment": "强烈情绪强化",
+        "content": "当对话出现强烈情绪时，强化对应的神态、动作与环境氛围描写。",
+        "enabled": True,
+        "scope": "global",
+        "keys": ["/(开心|兴奋|激动|愤怒|悲伤|害怕)/"],
+        "useRegex": True,
+        "constant": False,
+        "position": "global_note",
+        "order": 100,
+        "depth": 4,
+        "scanDepth": 8,
+        "probability": 100,
+        "useProbability": True,
+    },
+]
 
 # config.json（用户手写启动配置）展示名 -> AppSettings 字段名
 _CONFIG_KEY_MAP = {
@@ -34,9 +69,11 @@ _CONFIG_KEY_MAP = {
     "Author's Note": "authorNoteText",
     "Author's Note Depth": "authorNoteDepth",
     "Story String Template": "storyStringTemplate",
+    "Enable Thinking": "enableThinking",
+    "Reasoning Effort": "reasoningEffort",
 }
 _INT_FIELDS = ("summarizeThreshold", "authorNoteDepth")
-_BOOL_FIELDS = ("statusBarEnabled", "autoSummarize")
+_BOOL_FIELDS = ("statusBarEnabled", "autoSummarize", "enableThinking")
 
 # 字段名 -> config.json 展示名（用于把设置写回 config.json）
 _CONFIG_REVERSE_MAP = {
@@ -51,6 +88,8 @@ _CONFIG_REVERSE_MAP = {
     "authorNoteText": "Author's Note",
     "authorNoteDepth": "Author's Note Depth",
     "storyStringTemplate": "Story String Template",
+    "enableThinking": "Enable Thinking",
+    "reasoningEffort": "Reasoning Effort",
 }
 # 没有展示名、直接用 camelCase 写进 config.json 的字段
 _CAMELCASE_CONFIG_FIELDS = ("picGenerate",)
@@ -128,7 +167,7 @@ def _write_config_file() -> None:
 
 
 def init() -> None:
-    global _settings, _sessions
+    global _settings, _sessions, _app_data
     config.ensure_data_dir()
     _settings = AppSettings().model_dump()
     loaded = _read_json(config.SETTINGS_FILE, None)
@@ -139,12 +178,30 @@ def init() -> None:
     for s in _read_json(config.SESSIONS_FILE, []):
         if isinstance(s, dict) and s.get("id"):
             _sessions[s["id"]] = s
+    # 全局预设/正则/世界书（RP-Hub 增强）
+    app_data = _read_json(config.APP_DATA_FILE, None)
+    if isinstance(app_data, dict):
+        for key in ("presets", "regexScripts", "worldInfo"):
+            if isinstance(app_data.get(key), list):
+                _app_data[key] = app_data[key]
+        _app_data["_seeded"] = bool(app_data.get("_seeded"))
+    # 首次运行：seed 默认预设/世界书（之后用户清空也不会再自动补回）
+    if not _app_data["_seeded"]:
+        from .prompt.presets import DEFAULT_PRESETS
+
+        if not _app_data["presets"]:
+            _app_data["presets"] = [dict(p) for p in DEFAULT_PRESETS]
+        if not _app_data["worldInfo"]:
+            _app_data["worldInfo"] = [dict(w) for w in DEFAULT_WORLD_INFO]
+        _app_data["_seeded"] = True
+        _write_json(config.APP_DATA_FILE, _app_data)
 
 
 def persist() -> None:
     with _lock:
         _write_json(config.SETTINGS_FILE, _settings)
         _write_json(config.SESSIONS_FILE, list(_sessions.values()))
+        _write_json(config.APP_DATA_FILE, _app_data)
 
 
 # ---------------------------------------------------------------- settings
@@ -326,3 +383,35 @@ def remove_from_context(session_id: str, message_id: str) -> None:
         if message_id not in ids:
             s["deletedMessageIds"] = [*ids, message_id]
             _write_json(config.SESSIONS_FILE, list(_sessions.values()))
+
+
+# ---------------------------------------------------------------- app data（预设/正则/世界书，全局）
+
+def get_app_data() -> Dict[str, Any]:
+    with _lock:
+        return {
+            k: list(v)
+            for k, v in _app_data.items()
+            if k in ("presets", "regexScripts", "worldInfo")
+        }
+
+
+def get_global_presets() -> List[dict]:
+    return list(_app_data.get("presets") or [])
+
+
+def get_global_regex_scripts() -> List[dict]:
+    return list(_app_data.get("regexScripts") or [])
+
+
+def get_global_world_info() -> List[dict]:
+    return list(_app_data.get("worldInfo") or [])
+
+
+def update_app_data(key: str, items: List[dict]) -> Dict[str, Any]:
+    """按 key 替换某一类全局数据（presets / regexScripts / worldInfo）。"""
+    with _lock:
+        if key in _app_data:
+            _app_data[key] = [dict(x) for x in (items or [])]
+            _write_json(config.APP_DATA_FILE, _app_data)
+    return get_app_data()

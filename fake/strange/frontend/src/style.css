@@ -1,15 +1,62 @@
+/* 主题变量：深色（默认） + 浅色（html[data-theme="light"] 覆盖） */
 :root {
   --bg: #1a1a2e;
   --panel: #16213e;
+  --input-bg: #1a1a2e;
   --accent: #e94560;
+  --accent-hover: #f0526c;
   --assistant-bg: #0f3460;
   --text: #e0e0e0;
   --text-dim: #a0a0b8;
-  --text-faint: #555;
+  --text-mid: #888888;
+  --text-faint: #666666;
   --border: #2a2a4a;
+  --border-hover: #3a3a5a;
   --quote: #f0c040;
   --success: #10b981;
   --link-assistant: #ffa0af;
+  /* 白色叠加（hover/虚线等）：浅色主题反转为深色叠加 */
+  --overlay-rgb: 255, 255, 255;
+  /* 内嵌深色底（嵌套列表/思考卡） */
+  --shade: rgba(0, 0, 0, 0.2);
+  --pre-bg: rgba(0, 0, 0, 0.3);
+  --code-bg: rgba(255, 255, 255, 0.12);
+  --thinking-bg: rgba(0, 0, 0, 0.22);
+  /* 模态遮罩 */
+  --dim: rgba(0, 0, 0, 0.6);
+  /* 状态气泡专用 */
+  --status-bg: #1a2332;
+  --status-border: #2a3a4a;
+  --scrollbar-thumb: #2e2e4a;
+  --scrollbar-thumb-hover: #3d3d5e;
+}
+
+html[data-theme="light"] {
+  --bg: #f4f5f8;
+  --panel: #ffffff;
+  --input-bg: #f0f2f6;
+  --accent: #e94560;
+  --accent-hover: #f0526c;
+  --assistant-bg: #e8ecf5;
+  --text: #1f2430;
+  --text-dim: #5c6472;
+  --text-mid: #7a828e;
+  --text-faint: #9aa2ae;
+  --border: #e0e4ea;
+  --border-hover: #c9d0da;
+  --quote: #a66a00;
+  --success: #0d9f6e;
+  --link-assistant: #d6405f;
+  --overlay-rgb: 0, 0, 0;
+  --shade: rgba(0, 0, 0, 0.05);
+  --pre-bg: rgba(0, 0, 0, 0.06);
+  --code-bg: rgba(0, 0, 0, 0.07);
+  --thinking-bg: rgba(0, 0, 0, 0.05);
+  --dim: rgba(15, 23, 42, 0.42);
+  --status-bg: #eef1f6;
+  --status-border: #dde2ea;
+  --scrollbar-thumb: #c6ccd6;
+  --scrollbar-thumb-hover: #aeb6c2;
 }
 
 * {
@@ -31,6 +78,7 @@ body {
   font-size: 15px;
   line-height: 21px;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 button {
@@ -80,7 +128,7 @@ input {
   padding-left: 22px;
 }
 .md-body code {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--code-bg);
   color: inherit;
   border-radius: 4px;
   padding: 2px 5px;
@@ -88,7 +136,7 @@ input {
   font-size: 13px;
 }
 .md-body pre {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--pre-bg);
   border-radius: 8px;
   padding: 12px;
   margin: 6px 0;
@@ -102,20 +150,20 @@ input {
   font-size: 13px;
 }
 .md-body blockquote {
-  border-left: 3px solid rgba(255, 255, 255, 0.25);
+  border-left: 3px solid rgba(var(--overlay-rgb), 0.25);
   padding-left: 10px;
   margin: 6px 0;
-  color: #c0c0c0;
+  color: var(--text-mid);
 }
 .md-body table {
   border-collapse: collapse;
   margin: 10px 0;
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.2);
 }
 .md-body th,
 .md-body td {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.2);
   padding: 6px;
   text-align: left;
   vertical-align: top;
@@ -125,7 +173,7 @@ input {
 }
 .md-body hr {
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(var(--overlay-rgb), 0.2);
   margin: 10px 0;
 }
 .md-body em {
@@ -138,7 +186,7 @@ input {
   max-width: 100%;
 }
 
-/* user messages: white text */
+/* user messages: white text（user 气泡在两种主题下都保持强调色底） */
 .md-user {
   color: #fff;
 }
@@ -152,7 +200,7 @@ input {
 
 /* assistant messages: warm-yellow strong */
 .md-assistant {
-  color: #e0e0e0;
+  color: var(--text);
 }
 .md-assistant a {
   color: var(--link-assistant);
@@ -168,7 +216,7 @@ input {
 .overlay-dim {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--dim);
   z-index: 40;
   display: flex;
   align-items: center;
@@ -196,13 +244,13 @@ input {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2e2e4a;
+  background: var(--scrollbar-thumb);
   border-radius: 6px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3d3d5e;
+  background: var(--scrollbar-thumb-hover);
   background-clip: content-box;
 }
 

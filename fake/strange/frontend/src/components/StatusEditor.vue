@@ -125,42 +125,42 @@ async function save(): Promise<void> {
 
 <style scoped>
 .editor-box {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 16px;
   width: min(94%, 640px);
   max-height: 86vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  border-bottom: 1px solid #2a2a4a;
+  border-bottom: 1px solid var(--border);
 }
 .title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 17px;
   font-weight: 600;
 }
 .close-btn {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 20px;
   font-weight: 700;
   padding: 0 4px;
 }
 .subtitle {
-  color: #888;
+  color: var(--text-mid);
   font-size: 12px;
   padding: 10px 18px;
-  border-bottom: 1px solid #2a2a4a;
+  border-bottom: 1px solid var(--border);
 }
 .subtitle .src {
-  color: #f0c040;
+  color: var(--quote);
 }
 .body {
   overflow-y: auto;
@@ -168,9 +168,9 @@ async function save(): Promise<void> {
   flex: 1;
 }
 .field-card {
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #1a1a2e;
+  background: var(--bg);
   padding: 10px;
   margin-bottom: 10px;
 }
@@ -181,9 +181,9 @@ async function save(): Promise<void> {
   align-items: center;
 }
 .in {
-  background: #16213e;
-  color: #e0e0e0;
-  border: 1px solid #2a2a4a;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 13px;
@@ -204,13 +204,13 @@ async function save(): Promise<void> {
   background: rgba(233, 69, 96, 0.15);
   border: none;
   border-radius: 6px;
-  color: #e94560;
+  color: var(--accent);
   font-size: 13px;
   font-weight: 700;
   padding: 6px 9px;
 }
 .empty {
-  color: #666;
+  color: var(--text-faint);
   font-size: 13px;
   text-align: center;
   padding: 16px;
@@ -220,7 +220,7 @@ async function save(): Promise<void> {
   background: rgba(16, 185, 129, 0.12);
   border: 1px dashed rgba(16, 185, 129, 0.5);
   border-radius: 8px;
-  color: #10b981;
+  color: var(--success);
   font-size: 13px;
   font-weight: 600;
   padding: 10px;
@@ -230,7 +230,7 @@ async function save(): Promise<void> {
   align-items: center;
   gap: 10px;
   padding: 12px 18px;
-  border-top: 1px solid #2a2a4a;
+  border-top: 1px solid var(--border);
 }
 .spacer {
   flex: 1;
@@ -238,19 +238,19 @@ async function save(): Promise<void> {
 .reset {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
   padding: 8px 10px;
 }
 .cancel {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   padding: 9px 16px;
 }
 .save {
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 8px;
   padding: 9px 20px;

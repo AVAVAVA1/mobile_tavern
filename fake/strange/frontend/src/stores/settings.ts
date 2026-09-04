@@ -15,6 +15,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSummarize: true,
   customSystemPrompt: "",
   statusBarEnabled: false,
+  enableThinking: true,
+  reasoningEffort: "high",
 };
 
 export const useSettingsStore = defineStore("settings", () => {

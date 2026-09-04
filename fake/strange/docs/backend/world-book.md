@@ -1,38 +1,64 @@
-# 世界书 / 人物书
+# 世界书 / 人物书（增强）
 
 ## 定位
-世界书（character_book）条目的提取、激活、注入。用于把「关键词命中 / 常驻」的设定注入到上下文。
+世界书（character_book）条目的提取、激活、注入，对齐 RP-Hub 增强模型（7 种位置、正则/概率/scanDepth、全局 + 角色 scope）。
 
 ## 文件
 `backend/app/prompt/world_book.py`
 
-## 输入
+## 数据模型（规范化条目）
 
-```python
-extract_character_book(card) -> Optional[dict]     # 从卡里取并规范化
-get_active_entries(book, recent_text) -> List[dict] # 计算激活条目
-inject_entries(entries, position, char_name, user_name) -> str  # 渲染成文本
-build_search_text(messages, scan_depth) -> str      # 生成搜索文本
+```json
+{
+  "comment": "条目名",
+  "content": "内容",
+  "enabled": true,
+  "scope": "character|global",
+  "keys": ["关键词", "/正则/"],
+  "useRegex": false,
+  "constant": false,
+  "position": "at_depth",
+  "order": 0,
+  "depth": 4,
+  "scanDepth": null,
+  "probability": 100,
+  "useProbability": true
+}
 ```
 
-- `card`：角色卡 dict；世界书在 `data.character_book` 或 `data.extensions.character_book`。
-- `book`：规范化后的世界书（`{name, description, scan_depth, token_budget, recursive_scanning, case_sensitive, entries[]}`）。
-- 条目字段：`keys / secondary_keys / content / comment / constant / enabled / position(before_char|after_char) / insertion_order / case_sensitive / selective`。
+- `position` 7 种：`system_top / global_note / before_char / after_char / at_depth / user_top / assistant_top`。
+  - 兼容 ST 旧值：`before_character→before_char`、`after_character→after_char`、`character_top→before_char`、`character_bottom→after_char`、`an_top/author_note/an_bottom→global_note`、数字 `0/1/2/3/4`。
 
-## 输出
-- `extract_character_book`：规范化 dict 或 None（无世界书/损坏）。
-- `get_active_entries`：激活条目列表（`enabled` + (`constant` 或关键词命中)）。
-- `inject_entries`：按 `insertion_order` 排序后拼接的文本（`before_char`/`after_char` 分开），占位符已替换。
+## 函数
+
+| 函数 | 输入 | 输出 |
+|---|---|---|
+| `extract_character_book(card)` | 角色卡 | 规范化 book 或 None |
+| `normalize_book(raw)` | 原始 book | 规范化 book |
+| `normalize_world_info_entry(raw)` | 原始条目 | 规范化条目（含 extensions 覆盖） |
+| `get_active_entries_from_list(entries, messages, settings)` | 条目 + 历史 + 设置 | 激活条目（按 constant/order 排序） |
+| `get_active_entries(book, messages, settings)` | book 形式 | 委托列表版 |
+| `group_entries_by_position(entries)` | 激活条目 | 按位置分组（组内 order 升序） |
+| `inject_entries(entries, position, char_name, user_name)` | 条目 + 位置 | 拼接文本 |
+| `build_search_text(messages, scan_depth)` | 历史 | 最近 N 条拼接 |
 
 ## 激活规则
-- `constant=true`：常驻激活。
-- 否则：`keys + secondary_keys` 任一命中 `recent_text`（`case_sensitive` 决定大小写）。
-- `recent_text` 来自 `build_search_text(messages, scan_depth)`：最近 `scan_depth` 条消息内容拼接。
+- `enabled=false` 跳过；`constant=true` 恒触发（优先级最高，排最前）。
+- 非 constant：`scanDepth`（条目级，缺省用 `settings.worldInfoScanDepth`，受 `settings.worldInfoMaxDepth` 上限）>0 且有 keys；扫描最近 N 条消息，任一 key 命中（`useRegex` 用正则，否则忽略大小写子串）；再过 `probability`（`useProbability` 且 <100 时随机，constant 不参与）。
+- 排序：constant 优先，然后 `order` 降序。
+
+## 位置注入（在 template.py）
+- `system_top` / `global_note` → system prompt（story string 之前）。
+- `before_char` / `after_char` → story string 的 `{{wi_before}}` / `{{wi_after}}`。
+- `at_depth` → 作为 user 消息按 `depth` 从末尾倒数插入（只数 user/assistant）。
+- `user_top` → 前插到最后一条 user 消息。
+- `assistant_top` → 末尾追加 system 消息 `[Instructions for next message]`。
 
 ## 依赖 / 被谁调用
 - 依赖 `placeholders.replace_placeholders`。
 - 被 `prompt/template.py`（主上下文）、`agent/status_manager.py`（状态栏上下文）调用。
 
-## 扩展点 / 注意
-- 条目字段在 `normalize_entry` 里声明默认值；新增字段在此补。
-- `agent_book`（per-agent 世界书）目前只是被保存/展示，激活逻辑与 character_book 一致，由调用方决定是否区分。
+## 存储
+- 角色级：卡内 `character_book.entries`（或 `extensions.character_book`）。
+- 全局：`store.get_global_world_info()`（`backend/data/app_data.json` 的 `worldInfo`），端点 `GET/PUT /api/worldinfo`。
+- 首次启动 seed 两条默认全局条目（`store.DEFAULT_WORLD_INFO`）：「战斗描写风格」（keys 子串匹配示范）+「强烈情绪强化」（useRegex 正则示范）；清空后重启不自动补回。

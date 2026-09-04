@@ -1,0 +1,162 @@
+"""角色卡生成：LLM 根据用户描述生成 SillyTavern 兼容角色卡（核心版，不含头像/diff）。"""
+from __future__ import annotations
+
+import json
+from typing import Any, Dict, List
+
+from .llm import call_chat_non_streaming
+
+CARD_GEN_SYSTEM = """你是一名资深的角色卡构建专家，擅长 ACG 角色设定与沉浸式写作。
+根据用户的描述，生成一张 SillyTavern 兼容的角色卡（V2 格式），用中文输出。
+调用 generate_character_card 工具填写，不要输出任何额外文字。
+
+字段要求：
+- name：角色卡名称，中文，有吸引力（参考轻小说/Galgame 风格标题）。
+- description：100 字左右，向用户介绍设定，用「你」称呼用户（不要用 {{user}}），可用 markdown，重要内容加粗。
+- personality：详细的角色设定，必须详尽；涉及用户/用户名字处一律用 {{user}} 占位符；含外貌（发色、瞳色、身材等）等特征。
+- scenario：当前场景/情境。
+- first_mes：开场白（第一人称或第三人称，沉浸式）。
+- mes_example：可选，<START> 分隔的对话示例（{{char}}:/{{user}}: 或 <char>:/<user>: 行首）。
+- system_prompt：可选，系统提示词。
+- post_history_instructions：可选，后置指令。
+- tags：字符串数组。
+- world_info：世界书条目数组（可为空），每条含 comment/content/keys/position/constant/useRegex。position 取值 system_top/global_note/before_char/after_char/at_depth/user_top/assistant_top。
+- regex_scripts：正则脚本数组（可为空，用于正文美化），每条含 name/regex/flags/replacement/placement/markdownOnly/promptOnly。
+
+只输出工具调用，字段缺失时给空值。"""
+
+CARD_GEN_TOOL: Dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "generate_character_card",
+        "description": "生成一张 SillyTavern 兼容角色卡",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "personality": {"type": "string"},
+                "scenario": {"type": "string"},
+                "first_mes": {"type": "string"},
+                "mes_example": {"type": "string"},
+                "system_prompt": {"type": "string"},
+                "post_history_instructions": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "world_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "comment": {"type": "string"},
+                            "content": {"type": "string"},
+                            "keys": {"type": "array", "items": {"type": "string"}},
+                            "position": {"type": "string"},
+                            "constant": {"type": "boolean"},
+                            "useRegex": {"type": "boolean"},
+                        },
+                        "required": ["comment", "content"],
+                    },
+                },
+                "regex_scripts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "regex": {"type": "string"},
+                            "flags": {"type": "string"},
+                            "replacement": {"type": "string"},
+                            "placement": {"type": "array", "items": {"type": "integer"}},
+                            "markdownOnly": {"type": "boolean"},
+                            "promptOnly": {"type": "boolean"},
+                        },
+                        "required": ["name", "regex", "replacement"],
+                    },
+                },
+            },
+            "required": ["name", "description", "personality", "first_mes"],
+        },
+    },
+}
+
+
+def _extract_tool_args(resp: dict, name: str):
+    choices = resp.get("choices") or []
+    msg = (choices[0].get("message") if choices else None) or {}
+    for tc in msg.get("tool_calls") or []:
+        fn = (tc or {}).get("function") or {}
+        if fn.get("name") == name:
+            return fn.get("arguments")
+    return None
+
+
+def _str(v: Any) -> str:
+    return "" if v is None else str(v)
+
+
+def build_card_from_result(result: dict) -> dict:
+    """把工具返回的字段组装成角色卡 dict。"""
+    world_info = result.get("world_info") if isinstance(result.get("world_info"), list) else []
+    regex_scripts = result.get("regex_scripts") if isinstance(result.get("regex_scripts"), list) else []
+    tags = result.get("tags") if isinstance(result.get("tags"), list) else []
+
+    world_entries: List[dict] = []
+    for e in world_info:
+        if not isinstance(e, dict):
+            continue
+        world_entries.append({
+            "comment": _str(e.get("comment")),
+            "content": _str(e.get("content")),
+            "enabled": True,
+            "keys": e.get("keys") if isinstance(e.get("keys"), list) else [],
+            "constant": bool(e.get("constant")),
+            "useRegex": bool(e.get("useRegex")),
+            "position": e.get("position") or "at_depth",
+        })
+
+    data: Dict[str, Any] = {
+        "name": _str(result.get("name")),
+        "description": _str(result.get("description")),
+        "personality": _str(result.get("personality")),
+        "scenario": _str(result.get("scenario")),
+        "first_mes": _str(result.get("first_mes")),
+        "mes_example": _str(result.get("mes_example")),
+        "creator_notes": "Generated by MobileTavern",
+        "system_prompt": _str(result.get("system_prompt")),
+        "post_history_instructions": _str(result.get("post_history_instructions")),
+        "tags": tags,
+        "extensions": {"regex_scripts": regex_scripts},
+    }
+    if world_entries:
+        data["character_book"] = {"entries": world_entries}
+
+    return {"spec": "chara_card_v2", "spec_version": "2.0", "data": data}
+
+
+async def generate_card(settings: dict, prompt: str) -> dict:
+    """调用 LLM 生成角色卡，返回角色卡 dict。"""
+    resp = await call_chat_non_streaming(
+        settings,
+        [
+            {"role": "system", "content": CARD_GEN_SYSTEM},
+            {"role": "user", "content": f"请根据以下描述生成角色卡：\n\n{prompt}"},
+        ],
+        tools=[CARD_GEN_TOOL],
+        tool_choice={"type": "function", "function": {"name": "generate_character_card"}},
+        kind="card_generation",
+    )
+    args = _extract_tool_args(resp, "generate_character_card")
+    if args:
+        try:
+            result = json.loads(args)
+            return build_card_from_result(result)
+        except (json.JSONDecodeError, TypeError):
+            pass
+    # 兜底：从 content 里解析 JSON
+    content = ((resp.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+    if content:
+        try:
+            return build_card_from_result(json.loads(content))
+        except (json.JSONDecodeError, TypeError):
+            pass
+    raise RuntimeError("角色卡生成失败：模型未返回有效卡片")

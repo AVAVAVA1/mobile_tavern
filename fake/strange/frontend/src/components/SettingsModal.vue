@@ -9,10 +9,18 @@
 
       <div class="switch-row">
         <span class="label">状态栏 (Status Bar)</span>
-        <ToggleSwitch v-model="statusBarEnabled" color="#10b981" />
+        <ToggleSwitch v-model="statusBarEnabled" color="var(--success)" />
       </div>
       <div class="hint">
         每轮回复后按状态栏 schema 更新角色状态（可在会话卡片 Status 里自定义字段）。
+      </div>
+
+      <div class="switch-row">
+        <span class="label">思考模式 (Thinking)</span>
+        <ToggleSwitch v-model="enableThinking" color="#8b5cf6" />
+      </div>
+      <div class="hint">
+        向 LLM 请求开启思考模式（发送 thinking 参数，返回的思考会显示为思维链）。不支持该参数的模型请关闭。
       </div>
 
       <div class="section-label">Presets</div>
@@ -58,7 +66,7 @@
           <div class="label">Auto Summarize</div>
           <div class="switch-hint">Automatically trigger summarization</div>
         </div>
-        <ToggleSwitch v-model="autoSummarize" color="#e94560" />
+        <ToggleSwitch v-model="autoSummarize" color="var(--accent)" />
       </div>
 
       <label class="label">Author's Note</label>
@@ -121,6 +129,7 @@ const storyStringTemplate = ref("");
 const autoSummarize = ref(true);
 const customSystemPrompt = ref("");
 const statusBarEnabled = ref(false);
+const enableThinking = ref(true);
 const saved = ref(false);
 
 function initFromStore(): void {
@@ -136,6 +145,7 @@ function initFromStore(): void {
   autoSummarize.value = s.autoSummarize ?? true;
   customSystemPrompt.value = s.customSystemPrompt ?? "";
   statusBarEnabled.value = s.statusBarEnabled ?? false;
+  enableThinking.value = s.enableThinking ?? true;
 }
 
 watch(
@@ -168,6 +178,7 @@ async function handleSave(): Promise<void> {
     autoSummarize: autoSummarize.value,
     customSystemPrompt: customSystemPrompt.value.trim(),
     statusBarEnabled: statusBarEnabled.value,
+    enableThinking: enableThinking.value,
   });
   saved.value = true;
   setTimeout(() => (saved.value = false), 1500);
@@ -182,14 +193,14 @@ async function handleSave(): Promise<void> {
   padding-top: 40px;
 }
 .title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 28px;
   text-align: center;
 }
 .section-label {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
   margin: 20px 0 8px;
 }
@@ -200,30 +211,30 @@ async function handleSave(): Promise<void> {
   margin-bottom: 20px;
 }
 .preset-btn {
-  background: #16213e;
-  border: 1px solid #2a2a4a;
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 14px;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
 }
 .label {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   margin: 16px 0 6px;
   display: block;
 }
 .input {
   width: 100%;
-  background: #16213e;
-  color: #e0e0e0;
+  background: var(--panel);
+  color: var(--text);
   border-radius: 10px;
   padding: 14px;
   font-size: 16px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .input::placeholder {
-  color: #666;
+  color: var(--text-faint);
 }
 .multiline {
   min-height: 70px;
@@ -239,18 +250,18 @@ async function handleSave(): Promise<void> {
   margin: 0;
 }
 .switch-hint {
-  color: #555;
+  color: var(--text-faint);
   font-size: 11px;
   margin-top: 2px;
 }
 .hint {
-  color: #666;
+  color: var(--text-faint);
   font-size: 12px;
   margin-top: 6px;
 }
 .save-btn {
   width: 100%;
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 10px;
   padding: 16px;
@@ -266,7 +277,7 @@ async function handleSave(): Promise<void> {
   border-radius: 10px;
   padding: 16px;
   margin-top: 12px;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 16px;
 }
 </style>

@@ -274,18 +274,18 @@ async function applySummary(): Promise<void> {
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  background: #16213e;
-  border-bottom: 1px solid #2a2a4a;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
 }
 .back-btn {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 16px;
   padding: 4px 8px;
 }
 .title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 16px;
   font-weight: 600;
 }
@@ -298,7 +298,7 @@ async function applySummary(): Promise<void> {
   padding: 14px;
 }
 .loading-text {
-  color: #a0a0b8;
+  color: var(--text-dim);
   text-align: center;
   margin-top: 40px;
 }
@@ -311,23 +311,23 @@ async function applySummary(): Promise<void> {
 }
 .mode-btn {
   flex: 1;
-  background: #16213e;
+  background: var(--panel);
   border-radius: 8px;
   padding: 10px;
-  color: #888;
+  color: var(--text-mid);
   font-size: 14px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .mode-btn.active {
-  border-color: #e94560;
+  border-color: var(--accent);
   background: rgba(233, 69, 96, 0.1);
-  color: #e94560;
+  color: var(--accent);
   font-weight: 600;
 }
 
 /* System */
 .section-hint {
-  color: #10b981;
+  color: var(--success);
   font-size: 11px;
   margin-bottom: 8px;
 }
@@ -337,7 +337,7 @@ async function applySummary(): Promise<void> {
 .system-toggle {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
   padding: 0;
   margin-bottom: 6px;
@@ -351,15 +351,15 @@ async function applySummary(): Promise<void> {
   display: block;
   width: 100%;
   text-align: left;
-  background: #16213e;
+  background: var(--panel);
   border-radius: 8px;
   padding: 10px;
   margin-bottom: 8px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   cursor: pointer;
 }
 .system-role {
-  color: #e94560;
+  color: var(--accent);
   font-size: 11px;
   margin-bottom: 4px;
 }
@@ -369,7 +369,7 @@ async function applySummary(): Promise<void> {
   font-weight: 600;
 }
 .system-content {
-  color: #888;
+  color: var(--text-mid);
   font-size: 12px;
   line-height: 17px;
 }
@@ -386,13 +386,13 @@ async function applySummary(): Promise<void> {
   overflow: hidden;
 }
 .entry-list {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--shade);
   border-radius: 6px;
   padding: 8px;
   margin: 0 0 8px 12px;
 }
 .entry-item {
-  color: #f0c040;
+  color: var(--quote);
   font-size: 11px;
   line-height: 16px;
 }
@@ -402,7 +402,7 @@ async function applySummary(): Promise<void> {
   display: flex;
   align-items: flex-start;
   padding: 8px 10px;
-  border-bottom: 1px solid #1a1a2e;
+  border-bottom: 1px solid var(--bg);
   border-radius: 6px;
   margin-bottom: 2px;
 }
@@ -417,14 +417,14 @@ async function applySummary(): Promise<void> {
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  border: 1px solid #555;
+  border: 1px solid var(--text-faint);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .checkbox.checked {
-  background: #e94560;
-  border-color: #e94560;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .checkmark {
   color: #fff;
@@ -442,10 +442,10 @@ async function applySummary(): Promise<void> {
   margin-bottom: 2px;
 }
 .msg-role.user {
-  color: #e94560;
+  color: var(--accent);
 }
 .msg-preview {
-  color: #c0c0c0;
+  color: var(--text-dim);
   font-size: 13px;
   line-height: 18px;
 }
@@ -458,7 +458,7 @@ async function applySummary(): Promise<void> {
 .delete-btn {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 16px;
   font-weight: 700;
   padding: 2px 0 0 8px;
@@ -469,25 +469,25 @@ async function applySummary(): Promise<void> {
   margin-top: 16px;
 }
 .section-label {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
   margin-bottom: 6px;
   display: block;
 }
 .prompt-input {
   width: 100%;
-  background: #1a1a2e;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--text);
   border-radius: 8px;
   padding: 12px;
   font-size: 13px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   min-height: 70px;
   resize: vertical;
   margin-bottom: 12px;
 }
 .prompt-input::placeholder {
-  color: #555;
+  color: var(--text-faint);
 }
 .select-all {
   background: none;
@@ -499,7 +499,7 @@ async function applySummary(): Promise<void> {
 }
 .summarize-btn {
   width: 100%;
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 10px;
   padding: 14px;
@@ -517,7 +517,7 @@ async function applySummary(): Promise<void> {
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(var(--overlay-rgb), 0.4);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -529,18 +529,18 @@ async function applySummary(): Promise<void> {
 }
 .result-box {
   margin-top: 14px;
-  background: #16213e;
+  background: var(--panel);
   border-radius: 12px;
   padding: 16px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .result-label {
-  color: #888;
+  color: var(--text-mid);
   font-size: 12px;
   margin-bottom: 8px;
 }
 .result-text {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 14px;
   line-height: 20px;
   white-space: pre-wrap;
@@ -565,8 +565,8 @@ async function applySummary(): Promise<void> {
   border-radius: 8px;
   padding: 12px;
   background: none;
-  border: 1px solid #555;
-  color: #a0a0b8;
+  border: 1px solid var(--text-faint);
+  color: var(--text-dim);
   font-size: 14px;
 }
 
@@ -574,37 +574,37 @@ async function applySummary(): Promise<void> {
 .detail-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--dim);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 60;
 }
 .detail-box {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 16px;
   width: min(92%, 640px);
   max-height: 80%;
   display: flex;
   flex-direction: column;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .detail-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid #2a2a4a;
+  border-bottom: 1px solid var(--border);
 }
 .detail-title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 16px;
   font-weight: 600;
 }
 .detail-close {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 20px;
   font-weight: 700;
   padding: 0;
@@ -614,7 +614,7 @@ async function applySummary(): Promise<void> {
   overflow-y: auto;
 }
 .detail-text {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 14px;
   line-height: 22px;
   white-space: pre-wrap;

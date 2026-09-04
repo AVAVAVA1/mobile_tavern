@@ -1,4 +1,4 @@
-# MobileTavern PC 移植 — 前后端契约（SPEC）
+# 2b2（原 MobileTavern）PC 移植 — 前后端契约（SPEC）
 
 本项目把原 Expo/React Native 角色扮演 app 移植为 PC 前后端分离架构。
 
@@ -94,6 +94,16 @@
 - `GET /api/settings` → `AppSettings`
 - `PUT /api/settings`  body=部分 `AppSettings` → 完整 `AppSettings`（合并持久化）
 
+### 全局预设 / 正则脚本 / 世界书（RP-Hub 增强，持久化在 `backend/data/app_data.json`）
+- `GET /api/presets` → 预设数组；`PUT /api/presets` body=预设数组 → 完整数组
+- `GET /api/regex` → 正则脚本数组；`PUT /api/regex` body=脚本数组 → 完整数组
+- `GET /api/worldinfo` → 世界书条目数组；`PUT /api/worldinfo` body=条目数组 → 完整数组
+
+数据形状：
+- 预设：`{"name","content","enabled","role":"system|user|assistant"}`
+- 正则脚本：`{"name","regex","flags","replacement","placement":[1,2],"markdownOnly","promptOnly","runOnEdit","minDepth","maxDepth","scope","enabled"}`
+- 世界书条目：`{"comment","content","enabled","scope","keys","useRegex","constant","position","order","depth","scanDepth","probability","useProbability"}`
+
 ### 会话
 - `GET /api/sessions` → `Session[]`（按最后活跃时间降序）
 - `GET /api/sessions/{id}` → `Session`
@@ -101,6 +111,11 @@
 - `DELETE /api/sessions/{id}` → 204
 - `PATCH /api/sessions/{id}` body 可选 `{title?, characterBook?, agentBook?}` → 更新后的 `Session`
 - `DELETE /api/sessions/{id}/context/{message_id}` → 把该消息加入 `deletedMessageIds`（从 LLM 上下文移除）→ 更新后的 `Session`
+- `GET /api/sessions/{id}/export` → 导出角色卡 PNG（V2 `chara` chunk，含世界书/正则脚本；Content-Disposition attachment）
+
+### 角色卡生成
+- `POST /api/cards/generate` body `{"prompt":"描述"}` → 角色卡 dict（LLM 生成，不持久化）
+- `POST /api/cards/create` body `{"card": {...}}` → 新建的 `Session`
 
 ### 对话（SSE）
 - `POST /api/sessions/{id}/chat`  body `{"text":"用户输入"}` → `text/event-stream`
@@ -138,7 +153,9 @@
 
 ---
 
-## 主题色（前端保持原深色主题）
+## 主题色（深色为默认，浅色主题通过侧边栏 🌙/☀️ 按钮切换，`html[data-theme="light"]` 覆盖 CSS 变量）
+
+深色主题色板：
 
 | 用途 | 色值 |
 |---|---|
@@ -157,9 +174,10 @@
 
 ## 前端技术要点（务必遵守）
 
-- 用 `markdown-it`（`html:false`）渲染 markdown；渲染前用 JS 预处理函数把 HTML 标签转 markdown（`<br>`→换行、`<hr>`→`---`、`<b>/<strong>`→`**`、`<i>/<em>`→`*`、`<s>/<del>/<strike>`→`~~`、`<table>/<tr>/<td>/<th>`→markdown 表格、`<code>`→反引号、`<pre>`→围栏、`<blockquote>`→`>`、`<li>`→`-`、其余标签去标签保留文本），并把三种引号 `"..."` `“...”` `「...」` 包裹文本包成 `**...**`（assistant 消息中 strong 显示为 `#f0c040`）。
+- 用 `markdown-it`（`html:true` + `breaks:true`）渲染 markdown；DOMPurify 消毒并放宽白名单（style/svg/details/summary/iframe/srcdoc/sandbox/onclick 等），三种引号 `"..."` `“...”` `「...」` 包裹文本包成 `**...**`（assistant 消息中 strong 显示为 `#f0c040`）。
+- HTML 渲染（对齐 RP-Hub）：完整 HTML 文档（`<!doctype html>`/`<html>`）或 HTML 代码块（```html/```xml 或形似 HTML）渲染为沙箱 `iframe`；iframe 通过 postMessage + ResizeObserver **自适应内容高度**（无内部滚动、无空白）；块级 HTML 直接消毒渲染；混合内容剥离 html/head/body 结构标签。
 - 对话气泡：user 右对齐红底白字；assistant 左对齐 `#0f3460` 底。
-- 思维链解析：从消息内容中提取 `<thinking>...</thinking>` / `【思考】...【/思考】` / `{思考}...{/思考}`，折叠显示“Chain of Thought”。
+- 思维链解析：`parseCot` 提取 `<think>/<cot>`（含未闭合）与尾部 `[系统指令:]`，兜底 `【思考】`/`{思考}`；渲染为可折叠“💡 Thinking”卡片 + “📌 临时指令”卡片；显示侧正则只作用于正文 main，不作用于思维链/系统指令。
 - Agent 模式：assistant 气泡顶部显示可折叠“⚙ Agent Workflow · Lore: P{x}/W{y}/S{z}”，内含 Writing Guide 前 800 字、Status Bar 前 400 字。
 - `messageType=="status"` 的消息渲染为居中的“📊 Status Update”可折叠气泡。
 - 对话滚动到底部、接近底部时自动跟随、生成中显示“typing…”与 Stop 按钮。

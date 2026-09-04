@@ -31,10 +31,12 @@
 | `autoSummarize` | bool | true | 是否自动总结 |
 | `customSystemPrompt` | str | "" | 全局系统提示词（前置） |
 | `statusBarEnabled` | bool | false | 状态栏开关 |
+| `enableThinking` | bool | true | 向 LLM 请求开启思考模式（发送 `thinking: {"type":"enabled"}` + `reasoning_effort`） |
+| `reasoningEffort` | str | "high" | 思考强度：low / medium / high |
 | `picGenerate` | dict | comfyui 默认 | 生图配置（见 image-generation.md） |
 
 ## config.json 映射
-- `config.json` 里用「展示名」键（`User Name` / `API Key` / `Model` / `Base URL` / `Summarize Threshold` / `Auto Summarize` / `Custom System Prompt` / `Author's Note` / `Author's Note Depth` / `Story String Template` / `Status Bar`）。
+- `config.json` 里用「展示名」键（`User Name` / `API Key` / `Model` / `Base URL` / `Summarize Threshold` / `Auto Summarize` / `Custom System Prompt` / `Author's Note` / `Author's Note Depth` / `Story String Template` / `Status Bar` / `Enable Thinking`）。
 - `picGenerate` 直接以 camelCase 写进 config.json。
 - 启动时 `_apply_config_file()` **最后**覆盖已持久化设置；`PUT /api/settings` 会同时写回 settings.json 和 config.json（`_write_config_file`）。
 

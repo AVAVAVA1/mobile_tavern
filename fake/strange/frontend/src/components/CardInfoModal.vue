@@ -148,30 +148,30 @@ const rawJson = computed(() => JSON.stringify(props.session.characterCard, null,
 
 <style scoped>
 .info-box {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 16px;
   width: min(92%, 720px);
   max-height: 86vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  border-bottom: 1px solid #2a2a4a;
+  border-bottom: 1px solid var(--border);
 }
 .info-title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 17px;
   font-weight: 600;
 }
 .close-btn {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 20px;
   font-weight: 700;
   padding: 0 4px;
@@ -184,13 +184,13 @@ const rawJson = computed(() => JSON.stringify(props.session.characterCard, null,
   margin-bottom: 18px;
 }
 .section-title {
-  color: #10b981;
+  color: var(--success);
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 8px;
 }
 .section-title .sub {
-  color: #666;
+  color: var(--text-faint);
   font-weight: 400;
 }
 .section-title.summary {
@@ -203,42 +203,42 @@ const rawJson = computed(() => JSON.stringify(props.session.characterCard, null,
   font-size: 13px;
 }
 .kv .k {
-  color: #888;
+  color: var(--text-mid);
   flex-shrink: 0;
   min-width: 96px;
 }
 .kv .v {
-  color: #c0c0c0;
+  color: var(--text-dim);
   word-break: break-all;
 }
 .kv .v.accent {
-  color: #f0c040;
+  color: var(--quote);
 }
 .field {
   margin-bottom: 10px;
 }
 .field .k {
-  color: #888;
+  color: var(--text-mid);
   font-size: 12px;
   margin-bottom: 3px;
 }
 .field .v {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 13px;
   line-height: 19px;
   white-space: pre-wrap;
   word-break: break-word;
-  background: #1a1a2e;
+  background: var(--bg);
   border-radius: 8px;
   padding: 8px 10px;
-  border: 1px solid #23233c;
+  border: 1px solid var(--border);
 }
 .entry {
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 10px;
   margin-bottom: 8px;
-  background: #1a1a2e;
+  background: var(--bg);
 }
 .entry-head {
   display: flex;
@@ -248,7 +248,7 @@ const rawJson = computed(() => JSON.stringify(props.session.characterCard, null,
   margin-bottom: 4px;
 }
 .entry-keys {
-  color: #f0c040;
+  color: var(--quote);
   font-size: 12px;
   font-weight: 600;
   word-break: break-all;
@@ -259,33 +259,33 @@ const rawJson = computed(() => JSON.stringify(props.session.characterCard, null,
   flex-shrink: 0;
 }
 .badge {
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 10px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 1px 5px;
 }
 .badge.c {
-  color: #10b981;
+  color: var(--success);
   border-color: rgba(16, 185, 129, 0.4);
 }
 .badge.d {
-  color: #e94560;
+  color: var(--accent);
   border-color: rgba(233, 69, 96, 0.4);
 }
 .entry-content {
-  color: #c0c0c0;
+  color: var(--text-dim);
   font-size: 12px;
   line-height: 17px;
   white-space: pre-wrap;
   word-break: break-word;
 }
 .raw {
-  color: #c0c0c0;
+  color: var(--text-dim);
   font-size: 11px;
   line-height: 15px;
-  background: #1a1a2e;
-  border: 1px solid #2a2a4a;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
   overflow-x: auto;

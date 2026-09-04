@@ -278,30 +278,30 @@ async function testGenerate(): Promise<void> {
 
 <style scoped>
 .pic-box {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 16px;
   width: min(94%, 560px);
   max-height: 86vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  border-bottom: 1px solid #2a2a4a;
+  border-bottom: 1px solid var(--border);
 }
 .title {
-  color: #e0e0e0;
+  color: var(--text);
   font-size: 17px;
   font-weight: 600;
 }
 .close-btn {
   background: none;
   border: none;
-  color: #e94560;
+  color: var(--accent);
   font-size: 20px;
   font-weight: 700;
   padding: 0 4px;
@@ -313,26 +313,26 @@ async function testGenerate(): Promise<void> {
 }
 .label {
   display: block;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 13px;
   margin: 12px 0 6px;
 }
 .hint {
-  color: #666;
+  color: var(--text-faint);
   font-size: 12px;
   margin-top: 6px;
 }
 .hint.ok {
-  color: #10b981;
+  color: var(--success);
 }
 .hint.err {
-  color: #e94560;
+  color: var(--accent);
 }
 .input {
   width: 100%;
-  background: #1a1a2e;
-  color: #e0e0e0;
-  border: 1px solid #2a2a4a;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
@@ -370,7 +370,7 @@ textarea.input.area {
   background: #3b82f6;
 }
 .btn-test {
-  background: #10b981;
+  background: var(--success);
 }
 .btn-test:disabled {
   opacity: 0.6;
@@ -406,31 +406,31 @@ textarea.input.area {
   max-height: 320px;
   margin-top: 10px;
   border-radius: 8px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .footer {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 18px;
-  border-top: 1px solid #2a2a4a;
+  border-top: 1px solid var(--border);
 }
 .spacer {
   flex: 1;
 }
 .saved {
-  color: #10b981;
+  color: var(--success);
   font-size: 13px;
 }
 .btn-cancel {
   background: none;
   border: none;
-  color: #a0a0b8;
+  color: var(--text-dim);
   font-size: 14px;
   padding: 9px 16px;
 }
 .btn-save {
-  background: #e94560;
+  background: var(--accent);
   border: none;
   border-radius: 8px;
   padding: 9px 20px;
@@ -440,25 +440,25 @@ textarea.input.area {
   transition: background-color 0.15s ease;
 }
 .btn-save:hover {
-  background: #f0526c;
+  background: var(--accent-hover);
 }
 
 /* editor */
 .editor-box {
-  background: #16213e;
+  background: var(--panel);
   border-radius: 16px;
   width: min(94%, 720px);
   max-height: 86vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--border);
 }
 .editor-area {
   flex: 1;
   min-height: 320px;
-  background: #1a1a2e;
-  color: #e0e0e0;
-  border: 1px solid #2a2a4a;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin: 16px 18px;
   padding: 12px;
@@ -470,12 +470,12 @@ textarea.input.area {
   overflow: auto;
 }
 .editor-error {
-  color: #e94560;
+  color: var(--accent);
   font-size: 13px;
   padding: 0 18px 8px;
 }
 .editor-warning {
-  color: #f0c040;
+  color: var(--quote);
   font-size: 13px;
   padding: 0 18px 8px;
   line-height: 1.5;

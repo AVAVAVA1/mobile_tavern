@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import store
-from .routers import chat, context, pic, sessions, settings
+from .routers import appdata, cards, chat, context, pic, sessions, settings
 
 store.init()
 
@@ -22,6 +22,8 @@ app.include_router(sessions.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(context.router, prefix="/api")
 app.include_router(pic.router, prefix="/api")
+app.include_router(appdata.router, prefix="/api")
+app.include_router(cards.router, prefix="/api")
 
 
 @app.get("/api/health")

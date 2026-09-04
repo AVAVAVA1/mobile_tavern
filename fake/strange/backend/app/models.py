@@ -16,6 +16,10 @@ class AppSettings(BaseModel):
     autoSummarize: bool = True
     customSystemPrompt: str = ""
     statusBarEnabled: bool = False
+    # 是否向 LLM 请求开启思考模式（thinking），默认开启；不支持 thinking 参数的模型可关掉
+    enableThinking: bool = True
+    # 思考强度：low / medium / high（DeepSeek V4 reasoning_effort）
+    reasoningEffort: str = "high"
     # 生图配置：source 为当前来源，sources 下每个来源一份自己的配置（可扩展）
     picGenerate: Dict[str, Any] = Field(default_factory=lambda: {
         "source": "comfyui",

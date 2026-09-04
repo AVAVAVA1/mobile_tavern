@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 withDefaults(defineProps<{ modelValue: boolean; color?: string }>(), {
-  color: "#10b981",
+  color: "var(--success)",
 });
 
 const emit = defineEmits<{ (e: "update:modelValue", value: boolean): void }>();

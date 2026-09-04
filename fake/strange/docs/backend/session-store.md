@@ -11,6 +11,7 @@
 ## 数据落点
 - `backend/data/settings.json` — 设置
 - `backend/data/sessions.json` — 会话列表（每个元素一个 session dict）
+- `backend/data/app_data.json` — 全局预设/正则/世界书（`{presets, regexScripts, worldInfo}`）
 - 启动时 `init()` 载入；每次写操作写穿磁盘（部分函数只改内存，由调用方在检查点 `persist()`）。
 
 ## 输入 / 输出（主要函数）
@@ -35,6 +36,8 @@
 | `update_status(id, new_status, status_data)` | 状态 | 写 previousStatus/status/statusData（落盘） |
 | `remove_from_context(id, msg_id)` | msg_id | 加入 deletedMessageIds（落盘） |
 | `gen_id()` / `now_ms()` | — | 生成唯一 id / 毫秒时间戳 |
+| `get_global_presets()` / `get_global_regex_scripts()` / `get_global_world_info()` | — | 全局预设/正则/世界书列表 |
+| `update_app_data(key, items)` | key + 列表 | 替换某类全局数据（`presets`/`regexScripts`/`worldInfo`） |
 
 ## 依赖 / 被谁调用
 - 依赖 `models.AppSettings`、`config`、`prompt.placeholders`（create_session 里替换 first_mes 占位符）。
